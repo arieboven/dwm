@@ -65,7 +65,7 @@
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
-#define TAGMASK                 ((1 << LENGTH(tags)) - 1)
+#define TAGMASK                 ((1 << TAGLENGTH) - 1)
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define TRUNC(X,A,B)            (MAX((A), MIN((X), (B))))
 
@@ -311,6 +311,7 @@ static Atom wmatom[WMLast], netatom[NetLast];
 static int running = 1;
 static Cur *cursor[CurLast];
 static Clr **scheme;
+static Clr *customColors;
 static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon, *statmon;
@@ -328,17 +329,17 @@ static xcb_connection_t *xcon;
 
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
-	int nmasters[LENGTH(tags) + 1]; /* number of windows in master area */
-	float mfacts[LENGTH(tags) + 1]; /* mfacts per tag */
-	unsigned int sellts[LENGTH(tags) + 1]; /* selected layouts */
-	const Layout *ltidxs[LENGTH(tags) + 1][2]; /* matrix of tags and layouts indexes  */
-	int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
+	int nmasters[TAGLENGTH + 1]; /* number of windows in master area */
+	float mfacts[TAGLENGTH + 1]; /* mfacts per tag */
+	unsigned int sellts[TAGLENGTH + 1]; /* selected layouts */
+	const Layout *ltidxs[TAGLENGTH + 1][2]; /* matrix of tags and layouts indexes  */
+	int showbars[TAGLENGTH + 1]; /* display bar for the current tag */
 };
 
-static unsigned int scratchtag = 1 << LENGTH(tags);
+static unsigned int scratchtag = 1 << TAGLENGTH
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
-struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+struct NumTags { char limitexceeded[TAGLENGTH > 31 ? -1 : 1]; };
 
 /* function implementations */
 void
@@ -572,8 +573,8 @@ buttonpress(XEvent *e)
 		i = x = 0;
 		do
 			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
+		while (ev->x >= x && ++i < TAGLENGTH);
+		if (i < TAGLENGTH) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
@@ -663,8 +664,8 @@ clientmessage(XEvent *e)
 			setfullscreen(c, (cme->data.l[0] == 1 /* _NET_WM_STATE_ADD    */
 				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->isfullscreen)));
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
-		for (i = 0; i < LENGTH(tags) && !((1 << i) & c->tags); i++);
-		if (i < LENGTH(tags)) {
+		for (i = 0; i < TAGLENGTH && !((1 << i) & c->tags); i++);
+		if (i < TAGLENGTH) {
 			const Arg a = {.ui = 1 << i};
 			selmon = c->mon;
 			view(&a);
@@ -797,7 +798,7 @@ createmon(void)
 	m->pertag = ecalloc(1, sizeof(Pertag));
 	m->pertag->curtag = m->pertag->prevtag = 1;
 
-	for (i = 0; i <= LENGTH(tags); i++) {
+	for (i = 0; i <= TAGLENGTH; i++) {
 		m->pertag->nmasters[i] = m->nmaster;
 		m->pertag->mfacts[i] = m->mfact;
 
@@ -874,8 +875,9 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+		tw = TEXTW(stext) - lrpad + 10; /* 5px right and left padding */
+		drw_text(drw, m->ww - tw - 2 * sp, 0, 5, bh, 0, " ", 0);
+		drw_text(drw, m->ww - tw - 2 * sp + 5, 0, tw, bh, 0, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -884,14 +886,15 @@ drawbar(Monitor *m)
 			urg |= c->tags;
 	}
 	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
+	for (i = 0; i < TAGLENGTH; i++) {
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
 		if (occ & 1 << i)
-			drw_rect(drw, x + boxs, boxs, boxw, boxw,
+            drw_line(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
+			/*drw_rect(drw, x + boxs, boxs, boxw, boxw,
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-				urg & 1 << i);
+				urg & 1 << i); */
 		x += w;
 	}
 	w = blw = TEXTW(m->ltsymbol);
@@ -1891,6 +1894,9 @@ setup(void)
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
+    customColors = exalloc(LENGTH(lineColors), sizeof(XftColor));
+    for (i = 0; i < LENGTH(lineColors); i++)
+        drw_clr_create(drw, &customColors[i], lineColors[i], alphas[0][2]);
 	/* init bars */
 	updatebars();
 	updatestatus();
