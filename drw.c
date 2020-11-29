@@ -253,7 +253,7 @@ drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int
 }
 
 void
-drw_line(Drw *drw, int x, int y, unsigned int w, unsigned int h, Clr *color)
+drw_line(Drw *drw, int x, int y, unsigned int w, unsigned int h, Clr color)
 {
 	if (!drw)
 		return;

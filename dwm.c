@@ -245,7 +245,8 @@ static void tagnextmon(const Arg *arg);
 static void tagprevmon(const Arg *arg);
 static void tagothermon(const Arg *arg, int dir);
 static void tagswapmon(const Arg *arg);
-static void tagswaptomon(const Arg *arg, const Arg *argmon);
+/* static void tagswaptomon(const Arg *arg, const Arg *argmon); */
+static void tagswaptomon(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
@@ -336,7 +337,7 @@ struct Pertag {
 	int showbars[TAGLENGTH + 1]; /* display bar for the current tag */
 };
 
-static unsigned int scratchtag = 1 << TAGLENGTH
+static unsigned int scratchtag = 1 << TAGLENGTH;
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[TAGLENGTH > 31 ? -1 : 1]; };
@@ -572,7 +573,7 @@ buttonpress(XEvent *e)
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
 		do
-			x += TEXTW(tags[i]);
+			x += TEXTW(tags[selmon->num][i]);
 		while (ev->x >= x && ++i < TAGLENGTH);
 		if (i < TAGLENGTH) {
 			click = ClkTagBar;
@@ -887,9 +888,9 @@ drawbar(Monitor *m)
 	}
 	x = 0;
 	for (i = 0; i < TAGLENGTH; i++) {
-		w = TEXTW(tags[i]);
+		w = TEXTW(tags[m->num][i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[m->num][i], urg & 1 << i);
 		if (occ & 1 << i)
             drw_line(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
 			/*drw_rect(drw, x + boxs, boxs, boxw, boxw,
@@ -1736,8 +1737,9 @@ tagswapmon(const Arg *arg)
 	arrange(NULL);
 }
 
+/* tagswaptomon(const Arg *arg, const Arg *argmon) */
 void
-tagswaptomon(const Arg *arg, const Arg *argmon)
+tagswaptomon(const Arg *arg)
 {
 	Monitor *m;
 	Client *c, *sc = NULL, *next;
@@ -1745,7 +1747,7 @@ tagswaptomon(const Arg *arg, const Arg *argmon)
 	if (!mons->next)
 		return;
 
-	m = dirtomon(argmon->i);
+	m = dirtomon(arg->i);
 
 	for (c = selmon->clients; c; c = next) {
 		next = c->next;
@@ -1894,10 +1896,10 @@ setup(void)
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
-    customColors = exalloc(LENGTH(lineColors), sizeof(XftColor));
+    customColors = ecalloc(LENGTH(lineColors), sizeof(XftColor));
     for (i = 0; i < LENGTH(lineColors); i++)
         drw_clr_create(drw, &customColors[i], lineColors[i], alphas[0][2]);
-	/* init bars */
+    /* init bars */
 	updatebars();
 	updatestatus();
 	updatebarpos(selmon);
@@ -2027,12 +2029,10 @@ swaptags(const Arg *arg)
         if(!c->tags) c->tags = newtag;
     }
 
-            selmon->tagset[selmon->seltags] = newtag;
+    selmon->tagset[selmon->seltags] = newtag;
 
-            focus(NULL);
-            arrange(selmon);
-        }
-    }
+    focus(NULL);
+    arrange(selmon);
 }
 
 void
