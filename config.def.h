@@ -115,10 +115,10 @@ static const Layout layouts[] = {
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask,              KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask|ShiftMask,    KEY,      tagprevmon,     {.ui = 1 << TAG} }, \
+    { MODKEY|Mod1Mask,              KEY,      viewnextmon,    {.ui = 1 << TAG} }, \
+    { MODKEY|Mod1Mask|ShiftMask,    KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
     { Mod1Mask|ShiftMask,           KEY,      swaptags,       {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask|ControlMask,  KEY,      tagswaptomon,   {.ui = 1 << TAG, .i = +1} },
+    { MODKEY|Mod1Mask|ControlMask,  KEY,      tagswaptonextmon, {.ui = 1 << TAG} },
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \

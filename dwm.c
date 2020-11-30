@@ -245,8 +245,9 @@ static void tagnextmon(const Arg *arg);
 static void tagprevmon(const Arg *arg);
 static void tagothermon(const Arg *arg, int dir);
 static void tagswapmon(const Arg *arg);
-/* static void tagswaptomon(const Arg *arg, const Arg *argmon); */
-static void tagswaptomon(const Arg *arg);
+static void tagswaptonextmon(const Arg *arg);
+static void tagswaptoprevmon(const Arg *arg);
+static void tagswaptomon(const Arg *arg, int dir);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
@@ -266,6 +267,9 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void viewnextmon(const Arg *arg);
+static void viewprevmon(const Arg *arg);
+static void viewmon(const Arg *arg, int dir);
 static void warp(const Client *c);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
@@ -1678,108 +1682,6 @@ setfocus(Client *c)
 }
 
 void
-tagswapmon(const Arg *arg)
-{
-	Monitor *m;
-	Client *c, *sc = NULL, *mc = NULL, *next;
-
-	if (!mons->next)
-		return;
-
-	m = dirtomon(arg->i);
-
-	for (c = selmon->clients; c; c = next) {
-		next = c->next;
-		if (!ISVISIBLE(c))
-			continue;
-		unfocus(c, 1);
-		detach(c);
-		detachstack(c);
-		c->next = sc;
-		sc = c;
-	}
-
-	for (c = m->clients; c; c = next) {
-		next = c->next;
-		if (!ISVISIBLE(c))
-			continue;
-		unfocus(c, 1);
-		detach(c);
-		detachstack(c);
-		c->next = mc;
-		mc = c;
-	}
-
-	for (c = sc; c; c = next) {
-		next = c->next;
-		c->mon = m;
-		c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-		attach(c);
-		attachstack(c);
-		if (c->isfullscreen) {
-			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
-			XRaiseWindow(dpy, c->win);
-		}
-	}
-
-	for (c = mc; c; c = next) {
-		next = c->next;
-		c->mon = selmon;
-		c->tags = selmon->tagset[selmon->seltags]; /* assign tags of target monitor */
-		attach(c);
-		attachstack(c);
-		if (c->isfullscreen) {
-			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
-			XRaiseWindow(dpy, c->win);
-		}
-	}
-
-	focus(NULL);
-	arrange(NULL);
-}
-
-/* tagswaptomon(const Arg *arg, const Arg *argmon) */
-void
-tagswaptomon(const Arg *arg)
-{
-	Monitor *m;
-	Client *c, *sc = NULL, *next;
-
-	if (!mons->next)
-		return;
-
-	m = dirtomon(arg->i);
-
-	for (c = selmon->clients; c; c = next) {
-		next = c->next;
-		if (!ISVISIBLE(c))
-			continue;
-		unfocus(c, 1);
-		detach(c);
-		detachstack(c);
-		c->next = sc;
-		sc = c;
-	}
-
-	for (c = sc; c; c = next) {
-		next = c->next;
-		c->mon = m;
-        if (arg->ui & TAGMASK) {
-            c->tags = arg->ui & TAGMASK; /* assign tags of target monitor */
-        }
-		attach(c);
-		attachstack(c);
-		if (c->isfullscreen) {
-			setfullscreen(c, 0);
-			setfullscreen(c, 1);
-		}
-	}
-
-	focus(NULL);
-	arrange(NULL);
-}
-
-void
 setfullscreen(Client *c, int fullscreen)
 {
 	if (fullscreen && !c->isfullscreen) {
@@ -2084,6 +1986,121 @@ tagothermon(const Arg *arg, int dir)
 		focus(NULL);
 		arrange(newmon);
 	}
+	warp(selmon->sel);
+}
+
+void
+tagswapmon(const Arg *arg)
+{
+	Monitor *m;
+	Client *c, *sc = NULL, *mc = NULL, *next;
+
+	if (!mons->next)
+		return;
+
+	m = dirtomon(arg->i);
+
+	for (c = selmon->clients; c; c = next) {
+		next = c->next;
+		if (!ISVISIBLE(c))
+			continue;
+		unfocus(c, 1);
+		detach(c);
+		detachstack(c);
+		c->next = sc;
+		sc = c;
+	}
+
+	for (c = m->clients; c; c = next) {
+		next = c->next;
+		if (!ISVISIBLE(c))
+			continue;
+		unfocus(c, 1);
+		detach(c);
+		detachstack(c);
+		c->next = mc;
+		mc = c;
+	}
+
+	for (c = sc; c; c = next) {
+		next = c->next;
+		c->mon = m;
+		c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
+		attach(c);
+		attachstack(c);
+		if (c->isfullscreen) {
+			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
+			XRaiseWindow(dpy, c->win);
+		}
+	}
+
+	for (c = mc; c; c = next) {
+		next = c->next;
+		c->mon = selmon;
+		c->tags = selmon->tagset[selmon->seltags]; /* assign tags of target monitor */
+		attach(c);
+		attachstack(c);
+		if (c->isfullscreen) {
+			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
+			XRaiseWindow(dpy, c->win);
+		}
+	}
+
+	focus(NULL);
+	arrange(NULL);
+}
+
+void
+tagswaptonextmon(const Arg *arg)
+{
+    tagswaptomon(arg, 1);
+}
+
+void
+tagswaptoprevmon(const Arg *arg)
+{
+    tagswaptomon(arg, -1);
+}
+
+void
+tagswaptomon(const Arg *arg, int dir)
+{
+	Monitor *m;
+	Client *c, *sc = NULL, *next;
+
+	if (!mons->next)
+		return;
+
+	m = dirtomon(dir);
+
+	for (c = selmon->clients; c; c = next) {
+		next = c->next;
+		if (!ISVISIBLE(c))
+			continue;
+		unfocus(c, 1);
+		detach(c);
+		detachstack(c);
+		c->next = sc;
+		sc = c;
+	}
+
+	for (c = sc; c; c = next) {
+		next = c->next;
+		c->mon = m;
+        if (arg->ui & TAGMASK) {
+            c->tags = arg->ui & TAGMASK; /* assign tags of target monitor */
+        }
+		attach(c);
+		attachstack(c);
+		if (c->isfullscreen) {
+			setfullscreen(c, 0);
+			setfullscreen(c, 1);
+		}
+	}
+
+	focus(NULL);
+	arrange(NULL);
+    viewmon(arg, dir);
 }
 
 void
@@ -2534,6 +2551,34 @@ view(const Arg *arg)
 
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+viewnextmon(const Arg *arg)
+{
+    viewmon(arg, 1);
+}
+
+void
+viewprevmon(const Arg *arg)
+{
+    viewmon(arg, -1);
+}
+
+void
+viewmon(const Arg *arg, int dir)
+{
+	Monitor *m;
+
+	if (!mons->next)
+		return;
+	if ((m = dirtomon(dir)) == selmon)
+		return;
+	unfocus(selmon->sel, 0);
+	selmon = m;
+    view(arg);
+	focus(NULL);
+	warp(selmon->sel);
 }
 
 pid_t
