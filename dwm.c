@@ -881,7 +881,6 @@ drawbar(Monitor *m)
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad + 10; /* 5px right and left padding */
-		/* drw_text(drw, m->ww - tw - 2 * sp, 0, 5, bh, 0, " ", 0); */
 		drw_rect(drw, m->ww - tw - 2 * sp, 0, 5, bh, 1, 1);
 		drw_text(drw, m->ww - tw - 2 * sp + 5, 0, tw, bh, 0, stext, 0);
 	}
@@ -898,9 +897,6 @@ drawbar(Monitor *m)
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[m->num][i], urg & 1 << i);
 		if (occ & 1 << i)
             drw_line(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
-			/*drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-				urg & 1 << i); */
 		x += w;
 	}
 	w = blw = TEXTW(m->ltsymbol);
@@ -1771,7 +1767,7 @@ setup(void)
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 2;
+	bh = drw->fonts->h + 4;
 	updategeom();
 	sp = sidepad;
 	vp = (topbar == 1) ? vertpad : - vertpad;
