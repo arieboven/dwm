@@ -877,7 +877,8 @@ drawbar(Monitor *m)
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad + 10; /* 5px right and left padding */
-		drw_text(drw, m->ww - tw - 2 * sp, 0, 5, bh, 0, " ", 0);
+		/* drw_text(drw, m->ww - tw - 2 * sp, 0, 5, bh, 0, " ", 0); */
+		drw_rect(drw, m->ww - tw - 2 * sp, 0, 5, bh, 1, 1);
 		drw_text(drw, m->ww - tw - 2 * sp + 5, 0, tw, bh, 0, stext, 0);
 	}
 
