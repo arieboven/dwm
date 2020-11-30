@@ -1,2 +1,3 @@
 dwm
 *.o
+config.h
