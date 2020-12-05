@@ -45,6 +45,18 @@ static const char *tags[][TAGLENGTH] = {
 	{ "1", "2", "3", "4", "5", "6", "7", "8", "9"},
 };
 
+typedef struct {
+    const char *name;
+    const void *cmd;
+} Sp;
+const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
+const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
+static Sp scratchpads[] = {
+    /* name          cmd  */
+    {"spterm",      spcmd1},
+    {"spranger",    spcmd2},
+};
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
@@ -56,7 +68,7 @@ static const Rule rules[] = {
      *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
      *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
 	 */
-	/* class      instance    title       tags mask     switchtag   iscentered   isfloating   isterminal    noswallow   monitor */
+	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
 	{ "Gimp",                NULL,     NULL,           1 << 1,    1,         1,         1,          0,           0,        -1 },
 	{ NULL,                  NULL,     "accessgranted", 0,        0,         1,         1,          0,           0,         0 },
 	{ "Firefox",             NULL,     NULL,           1 << 8,    0,         0,         0,          0,          -1,        -1 },
@@ -77,6 +89,8 @@ static const Rule rules[] = {
     { "Tor Browser",         NULL,     NULL,           0,         0,         1,         1,          0,           0,         0 },
 	{ "discord",             NULL,     NULL,           1 << 2,    0,         1,         1,          0,           0,         1 },
 	{ NULL,                  NULL,     "Event Tester", 0,         0,         0,         0,          0,           1,        -1 }, /* xev */
+	{ NULL,                  "spterm", NULL,           SPTAG(0),  0,         1,         1,          1,           1,        -1 },
+	{ NULL,                  "spfm",   NULL,           SPTAG(1),  0,         1,         1,          1,           1,        -1 },
 };
 
 /* layout(s) */
@@ -133,16 +147,16 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, topbar ? "-b" : NULL, NULL };
 static const char *termcmd[]  = { "st", NULL };
-static const char scratchpadname[] = "scratchpad";
-static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "120x34", NULL };
 
 #include <X11/XF86keysym.h>
+
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
+    { MODKEY,                       XK_grave,  togglescratch,  {.ui = 0 } },
+    { MODKEY|ShiftMask,             XK_grave,  togglescratch,  {.ui = 1 } },
     { MODKEY,                       XK_b,      spawn,          SHCMD("firefox") },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
@@ -200,6 +214,7 @@ static Key keys[] = {
     { MODKEY|ShiftMask,             XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 2") },
     { MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 3") },
     { MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
+    { MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
     { MODKEY,                       XK_BackSpace, spawn,       SHCMD("$HOME/bin/lock") },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 };
