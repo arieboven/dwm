@@ -120,7 +120,7 @@ static const Layout layouts[] = {
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
-	{ MOD, XK_grave, ACTION##stack, {.i = PREVSEL } }, \
+	{ MOD, XK_w,     ACTION##stack, {.i = PREVSEL } }, \
 	{ MOD, XK_q,     ACTION##stack, {.i = 0 } }, \
 	{ MOD, XK_a,     ACTION##stack, {.i = 1 } }, \
 	{ MOD, XK_z,     ACTION##stack, {.i = 2 } }, \
@@ -196,10 +196,10 @@ static Key keys[] = {
     { 0,    XF86XK_AudioPlay,                  spawn,          SHCMD("playerctl play-pause") },
     { 0,    XF86XK_AudioStop,                  spawn,          SHCMD("playerctl stop") },
     { 0,    XK_Break,                          spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle") },
-    { MODKEY,    XK_s,                         spawn,          SHCMD("/home/account00/bin/dwm/screenshot 1") },
-    { MODKEY|ShiftMask,    XK_s,               spawn,          SHCMD("/home/account00/bin/dwm/screenshot 2") },
-    { MODKEY|ControlMask,  XK_s,               spawn,          SHCMD("/home/account00/bin/dwm/screenshot 3") },
-    { MODKEY|ShiftMask,    XK_m,               spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
+    { MODKEY,                       XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 1") },
+    { MODKEY|ShiftMask,             XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 2") },
+    { MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 3") },
+    { MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
     { MODKEY,                       XK_BackSpace, spawn,       SHCMD("$HOME/bin/lock") },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 };
