@@ -40,8 +40,8 @@ static const int statmonval = 0;
 /* tagging */
 #define TAGLENGTH 9
 static const char *tags[][TAGLENGTH] = { 
-	{ "1: Home", "2: Editing", "3: Media", "4: Office", "5: Games", "6", "7", "8", "9" },
-	{ "1: Music", "2: Virtualbox", "3", "4", "5", "6", "7", "8", "9"},
+	{ "1", "2", "3", "4", "5", "6", "7", "8", "9" },
+	{ "1", "2", "3", "4", "5", "6", "7", "8", "9"},
 	{ "1", "2", "3", "4", "5", "6", "7", "8", "9"},
 };
 
@@ -69,25 +69,9 @@ static const Rule rules[] = {
      *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
 	 */
 	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
-	{ "Gimp",                NULL,     NULL,           1 << 1,    1,         1,         1,          0,           0,        -1 },
-	{ NULL,                  NULL,     "accessgranted", 0,        0,         1,         1,          0,           0,         0 },
+	{ "Gimp",                NULL,     NULL,           0,	      1,         1,         1,          0,           0,        -1 },
 	{ "Firefox",             NULL,     NULL,           1 << 8,    0,         0,         0,          0,          -1,        -1 },
 	{ "St",                  NULL,     NULL,           0,         0,         0,         0,          1,           0,        -1 },
-	{ "Spotify",             NULL,     NULL,           1 << 0,    0,         0,         0,          0,           0,         1 },
-	{ "conky",               NULL,     NULL,           1 << 0,    0,         0,         0,          0,           0,         1 },
-	{ NULL,                  NULL,     "tty-clock",    1 << 0,    0,         0,         0,          0,           0,         1 },
-	{ NULL,                  NULL,     "vis",          1 << 0,    0,         0,         0,          0,           0,         1 },
-	{ "VirtualBox Manager",  NULL,     NULL,           1 << 1,    1,         0,         0,          0,           0,         1 },
-    { "minecraft-launcher",  NULL,     NULL,           1 << 4,    1,         1,         0,          0,           0,         0 },
-    { "libreoffice-startcenter", NULL, NULL,           1 << 3,    1,         0,         0,          0,           0,         0 },
-    { "vlc",                 NULL,     NULL,           1 << 2,    1,         0,         0,          0,           0,         0 },
-    { "Kodi",                NULL,     NULL,           1 << 2,    1,         0,         0,          0,           0,         0 },
-    { "kdenlive",            NULL,     NULL,           1 << 1,    1,         0,         0,          0,           0,         0 },
-    { "Ghb",                 NULL,     NULL,           1 << 1,    1,         0,         0,          0,           0,         0 },
-    { "Blender",             NULL,     NULL,           1 << 1,    1,         0,         0,          0,           0,         0 },
-    { "Inkscape",            NULL,     NULL,           1 << 1,    1,         0,         0,          0,           0,         0 },
-    { "Tor Browser",         NULL,     NULL,           0,         0,         1,         1,          0,           0,         0 },
-	{ "discord",             NULL,     NULL,           1 << 2,    0,         1,         1,          0,           0,         1 },
 	{ NULL,                  NULL,     "Event Tester", 0,         0,         0,         0,          0,           1,        -1 }, /* xev */
 	{ NULL,                  "spterm", NULL,           SPTAG(0),  0,         1,         1,          1,           1,        -1 },
 	{ NULL,                  "spfm",   NULL,           SPTAG(1),  0,         1,         1,          1,           1,        -1 },
@@ -122,15 +106,15 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod4Mask
+#define SECMODKEY Mod2Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask,              KEY,      viewnextmon,    {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask|ShiftMask,    KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
-    { Mod1Mask|ShiftMask,           KEY,      swaptags,       {.ui = 1 << TAG} }, \
-    { MODKEY|Mod1Mask|ControlMask,  KEY,      tagswaptonextmon, {.ui = 1 << TAG} },
+    { MODKEY|SECMODKEY,             KEY,      viewnextmon,    {.ui = 1 << TAG} }, \
+    { MODKEY|SECMODKEY|ShiftMask,   KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
+    { MODKEY|SECMODKEY|ControlMask, KEY,      tagswaptonextmon, {.ui = 1 << TAG} },
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
@@ -166,14 +150,14 @@ static Key keys[] = {
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY|ShiftMask,             XK_Return, zoom,           {0} },
-	{ MODKEY|Mod1Mask,              XK_u,      incrgaps,       {.i = +1 } },
-	{ MODKEY|Mod1Mask|ShiftMask,    XK_u,      incrgaps,       {.i = -1 } },
-	{ MODKEY|Mod1Mask,              XK_i,      incrigaps,      {.i = +1 } },
-	{ MODKEY|Mod1Mask|ShiftMask,    XK_i,      incrigaps,      {.i = -1 } },
-	{ MODKEY|Mod1Mask,              XK_o,      incrogaps,      {.i = +1 } },
-	{ MODKEY|Mod1Mask|ShiftMask,    XK_o,      incrogaps,      {.i = -1 } },
-	{ MODKEY|Mod1Mask,              XK_0,      togglegaps,     {0} },
-	{ MODKEY|Mod1Mask|ShiftMask,    XK_0,      defaultgaps,    {0} },
+	{ MODKEY|SECMODKEY,             XK_u,      incrgaps,       {.i = +1 } },
+	{ MODKEY|SECMODKEY|ShiftMask,   XK_u,      incrgaps,       {.i = -1 } },
+	{ MODKEY|SECMODKEY,             XK_i,      incrigaps,      {.i = +1 } },
+	{ MODKEY|SECMODKEY|ShiftMask,   XK_i,      incrigaps,      {.i = -1 } },
+	{ MODKEY|SECMODKEY,             XK_o,      incrogaps,      {.i = +1 } },
+	{ MODKEY|SECMODKEY|ShiftMask,   XK_o,      incrogaps,      {.i = -1 } },
+	{ MODKEY|SECMODKEY,             XK_0,      togglegaps,     {0} },
+	{ MODKEY|SECMODKEY|ShiftMask,   XK_0,      defaultgaps,    {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
@@ -181,6 +165,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_y,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[5]} },
+    { MODKEY|ControlMask,           XK_comma,  cyclelayout,    {.i = -1 } },
+    { MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_f,      fullscreen,     {0} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
@@ -190,8 +176,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
-	{ MODKEY|Mod1Mask|ControlMask,  XK_comma,  tagswapmon,     {.i = +1 } },
-	{ MODKEY|Mod1Mask|ControlMask,  XK_period, tagswapmon,     {.i = -1 } },
+	{ MODKEY|SECMODKEY|ControlMask, XK_comma,  tagswapmon,     {.i = +1 } },
+	{ MODKEY|SECMODKEY|ControlMask, XK_period, tagswapmon,     {.i = -1 } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -215,7 +201,6 @@ static Key keys[] = {
     { MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("/home/account00/bin/dwm/screenshot 3") },
     { MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
     { MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
-    { MODKEY,                       XK_BackSpace, spawn,       SHCMD("$HOME/bin/lock") },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 };
 
