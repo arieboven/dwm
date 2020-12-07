@@ -12,18 +12,19 @@ fullscreen | tagothermonitor
 pertag | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
 scratchpads | vanitygaps
 stacker | warp
-
+---
 
 ## Features
 + Add indicator line on active or occupied tag which color can be changed in config.h
++ Status on one specified monitor keeps updating regardless which monitor is active 
 + Pertag keeps settings per tag
 + Vanitygaps for gaps between windows and screen
 + Scratchpad for quick access to terminal
 + Swallow for saving space when a program is opend trough a termnial
-+ Included layouts:
++ Included layouts whitch can cycled through:
   + Bound to key: tile, monocle, spiral, bstack, floating (`MODKEY + t/m/y/u/f`)
   + Not bound to key: dwindle, deck, bstackhoriz, grid, nrowgrid, horizgrid, gapplessgrid, centerdmaster, centerdfloatingmaster
-
+---
 
 ## Dependencies
 In order to build dwm you need:
@@ -37,7 +38,7 @@ Optional programs
 + playerctl (audio ctl)
 + pamixer (volume ctl)
 + scrot (screenshot)
-
+---
 
 ## Installation
 Edit config.mk to match your local setup (dwm is installed into
@@ -62,7 +63,7 @@ Afterwards enter the following command to (re)build and install dwm (if
 necessary as root):
 
     make install
-
+---
 
 ## Custom keybindings
 | Keybinding | Action |
