@@ -55,6 +55,10 @@ Add the following line to your .xinitrc to start dwm using startx:
 
     exec dwm
 
+Or add the following line to your .xinitrc to start dwm using startx with logging:  
+
+    exec dwm 2> ~/.cache/dwm.log
+
 
 ## Configuration
 The configuration of dwm is done by creating a custom config.h
@@ -65,22 +69,38 @@ necessary as root):
     make install
 ---
 
+## Default keybindings
+This is list of the most keybindings set in the config file. All the keybindings can be found in the `config.def.h`/`config.h`. add/change/delete keybindings to your liking. 
+| Keybinding | Action |
+| :--- | :--- |
+| `MODKEY + enter` | Open terminal |
+| `MODKEY + p` | Open dmenu (application laucher) |
+| `MODKEY + shift + c` | Close window |
+| `MODKEY + 1-9` | Switch to tag |
+| `MODKEY + shift + 1-9` | Move focused window to tag |
+| `MODKEY + ,/.` | Focus next/previous monitor |
+| `MODKEY + shift + ,/.` | move focused window to next/previous monitor |
+| `MODKEY + l/h` | Expand/shrink window size |
+| `MODKEY + shift + backspace` | Quit dwm |
+
+
+
 ## Custom keybindings
 | Keybinding | Action |
 | :--- | :--- |
 |**General**|
 | `MODKEY + j/k` | Move window up/down the stack |
-| `MODKEY + shift + t` | Toggle picom |
+| `MODKEY + shift + t` | Toggle picom (transparency) |
 | `MODKEY + ~` | Toggle terminal scratchpad |
 | `MODKEY + shift + ~` | Toggle ranger (filemanger) scratchpad |
 | `MODKEY + shift + f` | Toggle fullscreen layout |
 | `MODKEY + ctrl + ,/.` | Switch next/previous layout |
+| `MODKEY + /ctrl/shift + s` | Make screenshot (scrot) of screen/window/selection |
 | `MODKEY + SECMODKEY + (/shift+) u` | Increase/decrease gaps |
 | `MODKEY + SECMODKEY + (/shift+) i` | Increase/decrease inner gaps |
 | `MODKEY + SECMODKEY + (/shift+) o` | Increase/decrease outer gaps |
 | `MODKEY + SECMODKEY + 0` | Toggle gaps |
 | `MODKEY + SECMODKEY + shift + 0` | Reset default gaps |
-| `MODKEY + shift + backspace` | Quit dwm |
 |**Multi monitor** |
 | `MODKEY + SECMODKEY + 1-9` | View tag on next monitor |
 | `MODKEY + SECMODKEY + shift + 1-9` | Move window to tag next monitor |
