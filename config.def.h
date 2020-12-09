@@ -202,6 +202,7 @@ static Key keys[] = {
     { MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
     { MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_BackSpace, quit,        {1} },
 };
 
 /* button definitions */
