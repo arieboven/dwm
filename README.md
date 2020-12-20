@@ -1,6 +1,10 @@
 # dwm - dynamic window manager | my custom build
 [dwm](https://dwm.suckless.org/) is an extremely fast, small, and dynamic window manager for X.
 
+| main screen | secondair screen |
+| :---: | :---: |
+| ![](images/screen1.png) | ![](images/screen2.png) |
+
 dwm out of the box has the necessary features. Through patches you can determine what features you would like to add. patches can be found on the [suckless.org](https://dwm.suckless.org/patches/) website. The patches that I added:  
 | | |
 | :---: | :---: |
@@ -10,8 +14,9 @@ cyclelayouts | swallow
 focusonnetactive | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
 fullscreen | tagothermonitor
 pertag | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
-scratchpads | vanitygaps
-stacker | warp
+restartsig |vanitygaps
+scratchpads | warp
+stacker | 
 ---
 
 ## Features
@@ -29,14 +34,14 @@ stacker | warp
 ## Dependencies
 In order to build dwm you need:
 + libxft (or [libxft-bgra](https://aur.archlinux.org/packages/libxft-bgra/) for colored font and emojis)
-+ st
++ st, or my own build of [st](https://github.com/arieboven/st)
 + dmemu
 + ttf-joypixels
 
 Optional programs
 + picom (transparency)
-+ playerctl (audio ctl)
-+ pamixer (volume ctl)
++ playerctl (audio control)
++ pamixer (volume control)
 + scrot (screenshot)
 ---
 
@@ -67,6 +72,12 @@ Afterwards enter the following command to (re)build and install dwm (if
 necessary as root):
 
     make install
+
+I have my custom config.h configuration stored in my [dotfiles](https://github.com/arieboven/dotfiles/tree/master/.config/git) repo, in which I have added tagnames, window rules, and some custom keybindings.
+
+### dwmblocks
+I use [dwmblocks](https://github.com/torrinfail/dwmblocks) for my statusbar. If you want you can make your own script with use of `xsetroot -name`, but I prefer dwmblocks. You can find my config of dwmblocks also in my [dotfiles](https://github.com/arieboven/dotfiles/tree/master/.config/git) repo with the scripts that I use.
+
 ---
 
 ## Default keybindings
@@ -81,6 +92,7 @@ This is list of the most keybindings set in the config file. All the keybindings
 | `MODKEY + ,/.` | Focus next/previous monitor |
 | `MODKEY + shift + ,/.` | move focused window to next/previous monitor |
 | `MODKEY + l/h` | Expand/shrink window size |
+| `MODKEY + ctrl + shift + backspace` | Restart dwm |
 | `MODKEY + shift + backspace` | Quit dwm |
 
 
