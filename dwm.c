@@ -173,7 +173,7 @@ typedef struct {
 } Rule;
 
 /* function declarations */
-static void applyrules(Client *c);
+static void applyrules(Client *c, int swallow);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
@@ -350,7 +350,7 @@ struct NumTags { char limitexceeded[TAGLENGTH > 31 ? -1 : 1]; };
 
 /* function implementations */
 void
-applyrules(Client *c)
+applyrules(Client *c, int swallow)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
@@ -379,35 +379,37 @@ applyrules(Client *c)
             c->isterminal = r->isterminal;
             c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
-            c->noswallow  = r->noswallow;
-			c->tags |= r->tags;
+            if (!swallow)
+			    c->tags |= r->tags;
 			if ((r->tags & SPTAGMASK) && r->isfloating) {
 				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
 				c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
 			}
 
-			for (m = mons; m && m->num != r->monitor; m = m->next);
-			if (m)
-				c->mon = m;
+            if (!swallow) {
+                for (m = mons; m && m->num != r->monitor; m = m->next);
+                if (m)
+                    c->mon = m;
 
-			if (r->switchtag) {
-				selmon = c->mon;
-				if (r->switchtag == 2 || r->switchtag == 4)
-					newtagset = c->mon->tagset[c->mon->seltags] ^ c->tags;
-				else
-					newtagset = c->tags;
+                if (r->switchtag) {
+                    selmon = c->mon;
+                    if (r->switchtag == 2 || r->switchtag == 4)
+                        newtagset = c->mon->tagset[c->mon->seltags] ^ c->tags;
+                    else
+                        newtagset = c->tags;
 
-				if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
-					if (r->switchtag == 3 || r->switchtag == 4)
-						c->switchtag = c->mon->tagset[c->mon->seltags];
-					if (r->switchtag == 1 || r->switchtag == 3)
-						view(&((Arg) { .ui = newtagset }));
-					else {
-						c->mon->tagset[c->mon->seltags] = newtagset;
-						arrange(c->mon);
-					}
-				}
-			}
+                    if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
+                        if (r->switchtag == 3 || r->switchtag == 4)
+                            c->switchtag = c->mon->tagset[c->mon->seltags];
+                        if (r->switchtag == 1 || r->switchtag == 3)
+                            view(&((Arg) { .ui = newtagset }));
+                        else {
+                            c->mon->tagset[c->mon->seltags] = newtagset;
+                            arrange(c->mon);
+                        }
+                    }
+                }
+            }
 		}
 	}
 	if (ch.res_class)
@@ -526,6 +528,9 @@ swallow(Client *p, Client *c)
 	if (c->noswallow || c->isterminal)
 		return;
 	if (c->noswallow && !swallowfloating && c->isfloating)
+		return;
+    /* Prevent swallowing if there is an loading window before the application */
+    if (!strcmp(c->name, "VirtualBox") || !strcmp(c->name, "Discord Updater"))
 		return;
 
 	detach(c);
@@ -1227,8 +1232,11 @@ manage(Window w, XWindowAttributes *wa)
 		c->tags = t->tags;
 	} else {
 		c->mon = selmon;
-		applyrules(c);
 		term = termforwin(c);
+        if (term)
+            applyrules(c, 1);
+        else
+            applyrules(c, 0);
 	}
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)

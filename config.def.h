@@ -68,6 +68,10 @@ static const Rule rules[] = {
      *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
      *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
 	 */
+    /*
+     * In the function swallow(Client *p, Client *c) in dwm.c
+     * can certain windows be blocked for swallowing if there are loading windows
+    */
 	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
 	{ "Gimp",                NULL,     NULL,           0,	      1,         1,         1,          0,           0,        -1 },
 	{ "Firefox",             NULL,     NULL,           1 << 8,    0,         0,         0,          0,          -1,        -1 },
