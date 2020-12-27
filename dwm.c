@@ -173,7 +173,7 @@ typedef struct {
 } Rule;
 
 /* function declarations */
-static void applyrules(Client *c, int swallow);
+static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
@@ -288,6 +288,7 @@ static pid_t getparentprocess(pid_t p);
 static int isdescprocess(pid_t p, pid_t c);
 static Client *swallowingclient(Window w);
 static Client *termforwin(const Client *c);
+static int termforwinBool(const Client *c);
 static pid_t winpid(Window w);
 
 /* variables */
@@ -350,10 +351,11 @@ struct NumTags { char limitexceeded[TAGLENGTH > 31 ? -1 : 1]; };
 
 /* function implementations */
 void
-applyrules(Client *c, int swallow)
+applyrules(Client *c)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
+    int swallow;
 	const Rule *r;
 	Monitor *m;
 	XClassHint ch = { NULL, NULL };
@@ -379,6 +381,7 @@ applyrules(Client *c, int swallow)
             c->isterminal = r->isterminal;
             c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
+            swallow = termforwinBool(c);
             if (!swallow)
 			    c->tags |= r->tags;
 			if ((r->tags & SPTAGMASK) && r->isfloating) {
@@ -1232,11 +1235,8 @@ manage(Window w, XWindowAttributes *wa)
 		c->tags = t->tags;
 	} else {
 		c->mon = selmon;
+        applyrules(c);
 		term = termforwin(c);
-        if (term)
-            applyrules(c, 1);
-        else
-            applyrules(c, 0);
 	}
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
@@ -2714,6 +2714,17 @@ termforwin(const Client *w)
 	}
 
 	return NULL;
+}
+
+int
+termforwinBool(const Client *c)
+{
+    Client *w;
+    w = termforwin(c);
+    if (w)
+        return 1;
+    else
+        return 0;
 }
 
 Client *
