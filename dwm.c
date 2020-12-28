@@ -420,6 +420,8 @@ applyrules(Client *c)
 	if (ch.res_name)
 		XFree(ch.res_name);
 	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : (c->mon->tagset[c->mon->seltags] & ~SPTAGMASK);
+    /* Uncommend line below to find name window and add client name in the swallow function to exclude that for swallow */
+    /* fprintf(stderr, "Name: %s, Swallow: %d, Mon: %d, Tag: %d\n", c->name, swallow, c->mon->num, c->tags); */
 }
 
 int
@@ -527,14 +529,16 @@ attachstack(Client *c)
 void
 swallow(Client *p, Client *c)
 {
+    unsigned int i;
 
 	if (c->noswallow || c->isterminal)
 		return;
 	if (c->noswallow && !swallowfloating && c->isfloating)
 		return;
     /* Prevent swallowing if there is an loading window before the application */
-    if (!strcmp(c->name, "VirtualBox") || !strcmp(c->name, "Discord Updater"))
-		return;
+    for (i = 0; i < LENGTH(exclude_swallow); i++)
+            if (!strcmp(c->name, exclude_swallow[i]))
+                    return;
 
 	detach(c);
 	detachstack(c);

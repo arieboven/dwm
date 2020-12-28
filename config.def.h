@@ -81,6 +81,10 @@ static const Rule rules[] = {
 	{ NULL,                  "spfm",   NULL,           SPTAG(1),  0,         1,         1,          1,           1,        -1 },
 };
 
+/* Add client name to exclude for swallow, example loading window */
+/* To find window name, uncomment fprintf at the end in applyrules(Client *c) function */
+static const char *exclude_swallow[] = { "VirtualBox", "Discord Updater" };
+
 /* layout(s) */
 static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
