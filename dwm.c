@@ -137,6 +137,7 @@ struct Monitor {
 	char ltsymbol[16];
 	float mfact;
 	int nmaster;
+    int attachbelow;
 	int num;
 	int by;               /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
@@ -178,6 +179,7 @@ static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interac
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
 static void attach(Client *c);
+static void attachbottom(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
 static void checkotherwm(void);
@@ -253,6 +255,7 @@ static void tagswapmon(const Arg *arg);
 static void tagswaptonextmon(const Arg *arg);
 static void tagswaptoprevmon(const Arg *arg);
 static void tagswaptomon(const Arg *arg, int dir);
+static void toggleattach(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
@@ -340,6 +343,7 @@ static xcb_connection_t *xcon;
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
 	int nmasters[TAGLENGTH + 1]; /* number of windows in master area */
+    int attachbelow[TAGLENGTH + 1]; /* attach below or on top */
 	float mfacts[TAGLENGTH + 1]; /* mfacts per tag */
 	unsigned int sellts[TAGLENGTH + 1]; /* selected layouts */
 	const Layout *ltidxs[TAGLENGTH + 1][2]; /* matrix of tags and layouts indexes  */
@@ -517,6 +521,15 @@ attach(Client *c)
 {
 	c->next = c->mon->clients;
 	c->mon->clients = c;
+}
+
+void
+attachbottom(Client *c)
+{
+    Client **tc;
+	c->next = NULL;
+	for (tc = &c->mon->clients; *tc; tc = &(*tc)->next);
+	*tc = c;
 }
 
 void
@@ -811,6 +824,7 @@ createmon(void)
 	m->tagset[0] = m->tagset[1] = 1;
 	m->mfact = mfact;
 	m->nmaster = nmaster;
+    m->attachbelow = attachbelow;
 	m->showbar = showbar;
 	m->topbar = topbar;
 	m->gappih = gappih;
@@ -825,6 +839,7 @@ createmon(void)
 
 	for (i = 0; i <= TAGLENGTH; i++) {
 		m->pertag->nmasters[i] = m->nmaster;
+        m->pertag->attachbelow[i] = m->attachbelow;
 		m->pertag->mfacts[i] = m->mfact;
 
 		m->pertag->ltidxs[i][0] = m->lt[0];
@@ -1270,7 +1285,10 @@ manage(Window w, XWindowAttributes *wa)
 		c->isfloating = c->oldstate = trans != None || c->isfixed;
 	if (c->isfloating)
 		XRaiseWindow(dpy, c->win);
-	attach(c);
+    if (c->mon->attachbelow)
+        attachbottom(c);
+	else
+        attach(c);
 	attachstack(c);
 	XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
 		(unsigned char *) &(c->win), 1);
@@ -1653,7 +1671,10 @@ sendmon(Client *c, Monitor *m)
 	detachstack(c);
 	c->mon = m;
 	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-	attach(c);
+    if (m->attachbelow)
+        attachbottom(c);
+	else
+        attach(c);
 	attachstack(c);
 	focus(NULL);
 	arrange(NULL);
@@ -2047,7 +2068,7 @@ tagswapmon(const Arg *arg)
 		next = c->next;
 		c->mon = m;
 		c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-		attach(c);
+        attach(c);
 		attachstack(c);
 		if (c->isfullscreen) {
 			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
@@ -2059,7 +2080,7 @@ tagswapmon(const Arg *arg)
 		next = c->next;
 		c->mon = selmon;
 		c->tags = selmon->tagset[selmon->seltags]; /* assign tags of target monitor */
-		attach(c);
+        attach(c);
 		attachstack(c);
 		if (c->isfullscreen) {
 			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
@@ -2111,7 +2132,7 @@ tagswaptomon(const Arg *arg, int dir)
         if (arg->ui & TAGMASK) {
             c->tags = arg->ui & TAGMASK; /* assign tags of target monitor */
         }
-		attach(c);
+        attach(c);
 		attachstack(c);
 		if (c->isfullscreen) {
 			setfullscreen(c, 0);
@@ -2122,6 +2143,12 @@ tagswaptomon(const Arg *arg, int dir)
 	focus(NULL);
 	arrange(NULL);
     viewmon(arg, dir);
+}
+
+void
+toggleattach(const Arg *arg)
+{
+	selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag] = !selmon->attachbelow;
 }
 
 void
@@ -2211,6 +2238,7 @@ toggleview(const Arg *arg)
 
 		/* apply settings for this view */
 		selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag];
+        selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag];
 		selmon->mfact = selmon->pertag->mfacts[selmon->pertag->curtag];
 		selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
@@ -2401,7 +2429,10 @@ updategeom(void)
 					m->clients = c->next;
 					detachstack(c);
 					c->mon = mons;
-					attach(c);
+                    if (attachbelow)
+                        attachbottom(c);
+					else
+                        attach(c);
 					attachstack(c);
 				}
 				if (m == selmon)
@@ -2566,6 +2597,7 @@ view(const Arg *arg)
 	}
 
 	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag];
+    selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag];
 	selmon->mfact = selmon->pertag->mfacts[selmon->pertag->curtag];
 	selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 	selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
