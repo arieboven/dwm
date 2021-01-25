@@ -9,12 +9,13 @@ dwm out of the box has the necessary features. Through patches you can determine
 | | |
 | :---: | :---: |
 alpha | staticstatus
-center | steam
-cyclelayouts | swallow
-focusonnetactive | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
-fullscreen | tagothermonitor
-pertag | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
-restartsig |vanitygaps
+attachbottom | steam
+center | swallow
+cyclelayouts | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
+focusonnetactive | tagothermonitor
+fullscreen | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
+pertag | vanitygaps
+restartsig | xrdb
 scratchpads | warp
 stacker | 
 ---
@@ -23,9 +24,19 @@ stacker |
 + Add indicator line on active or occupied tag which color can be changed in config.h
 + Status on one specified monitor keeps updating regardless which monitor is active 
 + Pertag keeps settings per tag
++ Toggle attach top/bottom (`MODKEY + Shitf + d`)
 + Vanitygaps for gaps between windows and screen
-+ Scratchpad for quick access to terminal
++ Scratchpads for quick access to terminal
 + Swallow for saving space when a program is opend trough a termnial
++ Change colors with Xresources and reload with `MODKEY + F5`
+  + `dwm.normbgcolor: <COLOR>`
+  + `dwm.normfgcolor: <COLOR>`
+  + `dwm.normbordercolor: <COLOR>`
+  + `dwm.selbgcolor: <COLOR>`
+  + `dwm.selfgcolor: <COLOR>`
+  + `dwm.selbordercolor: <COLOR>`
+  + `dwm.linecolor: <COLOR>`
+  + `dwm.linecolor: <COLOR>`
 + Included layouts whitch can cycled through:
   + Bound to key: tile, monocle, spiral, bstack, floating (`MODKEY + t/m/y/u/f`)
   + Not bound to key: dwindle, deck, bstackhoriz, grid, nrowgrid, horizgrid, gapplessgrid, centerdmaster, centerdfloatingmaster
@@ -34,8 +45,8 @@ stacker |
 ## Dependencies
 In order to build dwm you need:
 + libxft (or [libxft-bgra](https://aur.archlinux.org/packages/libxft-bgra/) for colored font and emojis)
-+ st, or my own build of [st](https://github.com/arieboven/st)
-+ dmemu
++ [st](https://st.suckless.org/), or my own build of [st](https://github.com/arieboven/st)
++ [dmemu](https://tools.suckless.org/dmenu/)
 + ttf-joypixels
 
 Optional programs
@@ -102,10 +113,12 @@ This is list of the most keybindings set in the config file. All the keybindings
 | :--- | :--- |
 |**General**|
 | `MODKEY + j/k` | Move window up/down the stack |
+| `MODKEY + Shift + d` | Toggle attach top/bottom |
 | `MODKEY + shift + t` | Toggle picom (transparency) |
 | `MODKEY + ~` | Toggle terminal scratchpad |
 | `MODKEY + shift + ~` | Toggle ranger (filemanger) scratchpad |
 | `MODKEY + shift + f` | Toggle fullscreen layout |
+| `MODKEY + F5` | Reload colors Xresource |
 | `MODKEY + ctrl + ,/.` | Switch next/previous layout |
 | `MODKEY + /ctrl/shift + s` | Make screenshot (scrot) of screen/window/selection |
 | `MODKEY + SECMODKEY + (/shift+) u` | Increase/decrease gaps |
