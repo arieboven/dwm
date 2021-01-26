@@ -3,6 +3,7 @@
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+static const unsigned int statuspadding = 5;    /* Padding on left and right side status */
 static const unsigned int gappih    = 8;        /* horiz inner gap between windows */
 static const unsigned int gappiv    = 8;        /* vert inner gap between windows */
 static const unsigned int gappoh    = 8;        /* horiz outer gap between windows and screen edge */

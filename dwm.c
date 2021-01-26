@@ -950,9 +950,9 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 10; /* 5px right and left padding */
-		drw_rect(drw, m->ww - tw, 0, 5, bh, 1, 1);
-		drw_text(drw, m->ww - tw + 5, 0, tw, bh, 0, stext, 0);
+		tw = TEXTW(stext) - lrpad + (2 * statuspadding); /* 5px right and left padding */
+		drw_rect(drw, m->ww - tw, 0, statuspadding, bh, 1, 1);
+		drw_text(drw, m->ww - tw + statuspadding, 0, tw, bh, 0, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
