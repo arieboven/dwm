@@ -242,6 +242,7 @@ static void propertynotify(XEvent *e);
 static void pushstack(const Arg *arg);
 static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
+static void resetlayout(const Arg *arg);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
@@ -361,7 +362,7 @@ static xcb_connection_t *xcon;
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
 	int nmasters[TAGLENGTH + 1]; /* number of windows in master area */
-    int attachbelow[TAGLENGTH + 1]; /* attach below or on top */
+    int attachbelows[TAGLENGTH + 1]; /* attach below or on top */
 	float mfacts[TAGLENGTH + 1]; /* mfacts per tag */
 	unsigned int sellts[TAGLENGTH + 1]; /* selected layouts */
 	const Layout *ltidxs[TAGLENGTH + 1][2]; /* matrix of tags and layouts indexes  */
@@ -857,7 +858,7 @@ createmon(void)
 
 	for (i = 0; i <= TAGLENGTH; i++) {
 		m->pertag->nmasters[i] = m->nmaster;
-        m->pertag->attachbelow[i] = m->attachbelow;
+        m->pertag->attachbelows[i] = m->attachbelow;
 		m->pertag->mfacts[i] = m->mfact;
 
 		m->pertag->ltidxs[i][0] = m->lt[0];
@@ -1582,6 +1583,16 @@ recttomon(int x, int y, int w, int h)
 }
 
 void
+resetlayout(const Arg *arg)
+{
+	Arg default_layout = {.v = &layouts[0]};
+	Arg default_mfact = {.f = mfact + 1};
+
+	setlayout(&default_layout);
+	setmfact(&default_mfact);
+}
+
+void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
 	if (applysizehints(c, &x, &y, &w, &h, interact))
@@ -1598,6 +1609,10 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldw = c->w; c->w = wc.width = w;
 	c->oldh = c->h; c->h = wc.height = h;
 	wc.border_width = c->bw;
+
+	if ((nexttiled(c->mon->clients) == c) && !(nexttiled(c->next)))
+		resetlayout(NULL);
+
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 	configure(c);
 	XSync(dpy, False);
@@ -2199,7 +2214,7 @@ tagswaptomon(const Arg *arg, int dir)
 void
 toggleattach(const Arg *arg)
 {
-	selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag] = !selmon->attachbelow;
+	selmon->attachbelow = selmon->pertag->attachbelows[selmon->pertag->curtag] = !selmon->attachbelow;
 }
 
 void
@@ -2289,7 +2304,7 @@ toggleview(const Arg *arg)
 
 		/* apply settings for this view */
 		selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag];
-        selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag];
+        selmon->attachbelow = selmon->pertag->attachbelows[selmon->pertag->curtag];
 		selmon->mfact = selmon->pertag->mfacts[selmon->pertag->curtag];
 		selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
@@ -2648,7 +2663,7 @@ view(const Arg *arg)
 	}
 
 	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag];
-    selmon->attachbelow = selmon->pertag->attachbelow[selmon->pertag->curtag];
+    selmon->attachbelow = selmon->pertag->attachbelows[selmon->pertag->curtag];
 	selmon->mfact = selmon->pertag->mfacts[selmon->pertag->curtag];
 	selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 	selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
