@@ -93,6 +93,7 @@
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { innerH, innerV, outerH, outerV }; /* gaps */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -222,6 +223,8 @@ static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static void fullscreen(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
+static void getfacts(Monitor *m, int msize, int ssize, float *mf, float *sf, int *mr, int *sr);
+static void getgaps(Monitor *m, int *oh, int *ov, int *ih, int *iv, unsigned int *nc);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
@@ -255,6 +258,7 @@ static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
+static void setgaps(int oh, int ov, int ih, int iv);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
@@ -277,6 +281,7 @@ static void tagswaptomon(const Arg *arg, int dir);
 static void toggleattach(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglegaps(const Arg *arg);
 static void togglescratch(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
@@ -368,6 +373,8 @@ struct Pertag {
 	unsigned int sellts[TAGLENGTH + 1]; /* selected layouts */
 	const Layout *ltidxs[TAGLENGTH + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[TAGLENGTH + 1]; /* display bar for the current tag */
+    int enablegaps[TAGLENGTH + 1]; /* enable gaps or not */
+    int gaps[TAGLENGTH + 1][4]; /* gap values */
     Layout *last_layouts[TAGLENGTH + 1]; /* Last selected layout */
 };
 
@@ -868,6 +875,11 @@ createmon(void)
 		m->pertag->sellts[i] = m->sellt;
 
 		m->pertag->showbars[i] = m->showbar;
+		m->pertag->enablegaps[i] = 1;
+        m->pertag->gaps[i][innerH] = m->gappih;
+        m->pertag->gaps[i][innerV] = m->gappiv;
+        m->pertag->gaps[i][outerH] = m->gappoh;
+        m->pertag->gaps[i][outerV] = m->gappov;
 		m->pertag->last_layouts[i] = m->last_layout;
 	}
 
@@ -1122,6 +1134,49 @@ getatomprop(Client *c, Atom prop)
 		XFree(p);
 	}
 	return atom;
+}
+
+void
+getfacts(Monitor *m, int msize, int ssize, float *mf, float *sf, int *mr, int *sr)
+{
+	unsigned int n;
+	float mfacts, sfacts;
+	int mtotal = 0, stotal = 0;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	mfacts = MIN(n, m->nmaster);
+	sfacts = n - m->nmaster;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++)
+		if (n < m->nmaster)
+			mtotal += msize / mfacts;
+		else
+			stotal += ssize / sfacts;
+
+	*mf = mfacts; // total factor of master area
+	*sf = sfacts; // total factor of stack area
+	*mr = msize - mtotal; // the remainder (rest) of pixels after an even master split
+	*sr = ssize - stotal; // the remainder (rest) of pixels after an even stack split
+}
+
+void
+getgaps(Monitor *m, int *oh, int *ov, int *ih, int *iv, unsigned int *nc)
+{
+	unsigned int n, oe, ie;
+	oe = ie = selmon->pertag->enablegaps[selmon->pertag->curtag];
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	if (smartgaps && n == 1) {
+		oe = 0; // outer gaps disabled when only one client
+	}
+
+	*oh = m->gappoh*oe; // outer horizontal gap
+	*ov = m->gappov*oe; // outer vertical gap
+	*ih = m->gappih*ie; // inner horizontal gap
+	*iv = m->gappiv*ie; // inner vertical gap
+	*nc = n;            // number of clients
 }
 
 int
@@ -1852,6 +1907,21 @@ setfullscreen(Client *c, int fullscreen)
 }
 
 void
+setgaps(int oh, int ov, int ih, int iv)
+{
+	if (oh < 0) oh = 0;
+	if (ov < 0) ov = 0;
+	if (ih < 0) ih = 0;
+	if (iv < 0) iv = 0;
+
+	selmon->gappoh = selmon->pertag->gaps[selmon->pertag->curtag][outerH] = oh;
+	selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV] = ov;
+	selmon->gappih = selmon->pertag->gaps[selmon->pertag->curtag][innerH] = ih;
+	selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV] = iv;
+	arrange(selmon);
+}
+
+void
 setlayout(const Arg *arg)
 {
 	if (!arg || !arg->v || arg->v != selmon->lt[selmon->sellt])
@@ -2257,6 +2327,13 @@ togglefloating(const Arg *arg)
 }
 
 void
+togglegaps(const Arg *arg)
+{
+	selmon->pertag->enablegaps[selmon->pertag->curtag] = !selmon->pertag->enablegaps[selmon->pertag->curtag];
+	arrange(selmon);
+}
+
+void
 togglescratch(const Arg *arg)
 {
 	Client *c;
@@ -2325,6 +2402,10 @@ toggleview(const Arg *arg)
 		selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
 		selmon->lt[selmon->sellt^1] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt^1];
+		selmon->gappih = selmon->pertag->gaps[selmon->pertag->curtag][innerH];
+		selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV];
+		selmon->gappoh = selmon->pertag->gaps[selmon->pertag->curtag][outerH];
+		selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV];
 		selmon->last_layout = selmon->pertag->last_layouts[selmon->pertag->curtag];
 
 		if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
@@ -2685,6 +2766,10 @@ view(const Arg *arg)
 	selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag];
 	selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt];
 	selmon->lt[selmon->sellt^1] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt^1];
+    selmon->gappih = selmon->pertag->gaps[selmon->pertag->curtag][innerH];
+    selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV];
+    selmon->gappoh = selmon->pertag->gaps[selmon->pertag->curtag][outerH];
+    selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV];
     selmon->last_layout = selmon->pertag->last_layouts[selmon->pertag->curtag];
 
 	if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
