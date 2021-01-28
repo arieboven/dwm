@@ -5,19 +5,20 @@
 | :---: | :---: |
 | ![](images/screen1.png) | ![](images/screen2.png) |
 
-dwm out of the box has the necessary features. Through patches you can determine what features you would like to add. patches can be found on the [suckless.org](https://dwm.suckless.org/patches/) website. The patches that I added:  
+dwm out of the box has the necessary features. Through patches you can determine what features you would like to add. patches can be found on the [suckless.org](https://dwm.suckless.org/patches/) website. The more I use it the more patches I add/modify (for learning purpose and just trying out new patches if they fit my need). The patches that I added:  
 | | |
 | :---: | :---: |
-alpha | staticstatus
-attachbottom | steam
-center | swallow
-cyclelayouts | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
-focusonnetactive | tagothermonitor
-fullscreen | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
+alpha | stacker
+attachbottom | staticstatus
+center | steam
+cyclelayouts | swallow
+focusonnetactive | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
+fullscreen (modified) | tagothermonitor
+noborder | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
 pertag | vanitygaps
+resetlayout | warp
 restartsig | xrdb
-scratchpads | warp
-stacker | 
+scratchpads | 
 ---
 
 ## Features
@@ -25,6 +26,8 @@ stacker |
 + Status on one specified monitor keeps updating regardless which monitor is active 
 + Pertag keeps settings per tag
 + Toggle attach top/bottom (`MODKEY + Shitf + d`)
++ Reset `nmaster`, `layout`, and `mfact` when last window on tag closes or with keybinding
++ No border when one window or in monocly mode
 + Vanitygaps for gaps between windows and screen
 + Scratchpads for quick access to terminal
 + Swallow for saving space when a program is opend trough a termnial
@@ -119,6 +122,7 @@ This is list of the most keybindings set in the config file. All the keybindings
 | `MODKEY + shift + ~` | Toggle ranger (filemanger) scratchpad |
 | `MODKEY + shift + f` | Toggle fullscreen layout |
 | `MODKEY + F5` | Reload colors Xresource |
+| `MODKEY + r` | Reset layout |
 | `MODKEY + ctrl + ,/.` | Switch next/previous layout |
 | `MODKEY + /ctrl/shift + s` | Make screenshot (scrot) of screen/window/selection |
 | `MODKEY + SECMODKEY + (/shift+) u` | Increase/decrease gaps |
