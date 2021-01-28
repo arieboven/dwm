@@ -51,15 +51,15 @@ static const char *tags[][TAGLENGTH] = {
 };
 
 typedef struct {
-    const char *name;
-    const void *cmd;
+	const char *name;
+	const void *cmd;
 } Sp;
 const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
 const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
 static Sp scratchpads[] = {
-    /* name          cmd  */
-    {"spterm",      spcmd1},
-    {"spranger",    spcmd2},
+	/* name          cmd  */
+	{"spterm",      spcmd1},
+	{"spranger",    spcmd2},
 };
 
 static const Rule rules[] = {
@@ -78,7 +78,7 @@ static const Rule rules[] = {
      * can certain windows be blocked for swallowing if there are loading windows
     */
 	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
-	{ "Gimp",                NULL,     NULL,           0,	      1,         1,         1,          0,           0,        -1 },
+	{ "Gimp",                NULL,     NULL,           0,	        1,         1,         1,          0,           0,        -1 },
 	{ "Firefox",             NULL,     NULL,           1 << 8,    0,         0,         0,          0,          -1,        -1 },
 	{ "St",                  NULL,     NULL,           0,         0,         0,         0,          1,           0,        -1 },
 	{ NULL,                  NULL,     "Event Tester", 0,         0,         0,         0,          0,           1,        -1 }, /* xev */
@@ -125,9 +125,9 @@ static const Layout layouts[] = {
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} }, \
-    { MODKEY|SECMODKEY,             KEY,      viewnextmon,    {.ui = 1 << TAG} }, \
-    { MODKEY|SECMODKEY|ShiftMask,   KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
-    { MODKEY|SECMODKEY|ControlMask, KEY,      tagswaptonextmon, {.ui = 1 << TAG} },
+	{ MODKEY|SECMODKEY,             KEY,      viewnextmon,    {.ui = 1 << TAG} }, \
+	{ MODKEY|SECMODKEY|ShiftMask,   KEY,      tagnextmon,     {.ui = 1 << TAG} }, \
+	{ MODKEY|SECMODKEY|ControlMask, KEY,      tagswaptonextmon, {.ui = 1 << TAG} },
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
@@ -152,9 +152,9 @@ static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
-    { MODKEY,                       XK_grave,  togglescratch,  {.ui = 0 } },
-    { MODKEY|ShiftMask,             XK_grave,  togglescratch,  {.ui = 1 } },
-    { MODKEY,                       XK_b,      spawn,          SHCMD("firefox") },
+	{ MODKEY,                       XK_grave,  togglescratch,  {.ui = 0 } },
+	{ MODKEY|ShiftMask,             XK_grave,  togglescratch,  {.ui = 1 } },
+	{ MODKEY,                       XK_b,      spawn,          SHCMD("firefox") },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY|ShiftMask,             XK_d,      toggleattach,   {0} },
 	STACKKEYS(MODKEY,                          focus)
@@ -163,7 +163,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-    { MODKEY,                       XK_r,      resetlayout,    {0} },
+	{ MODKEY,                       XK_r,      resetlayout,    {0} },
 	{ MODKEY|ShiftMask,             XK_Return, zoom,           {0} },
 	{ MODKEY|SECMODKEY,             XK_u,      incrgaps,       {.i = +1 } },
 	{ MODKEY|SECMODKEY|ShiftMask,   XK_u,      incrgaps,       {.i = -1 } },
@@ -180,8 +180,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_y,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[5]} },
-    { MODKEY|ControlMask,           XK_comma,  cyclelayout,    {.i = -1 } },
-    { MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
+	{ MODKEY|ControlMask,           XK_comma,  cyclelayout,    {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscreen, {0} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
@@ -202,21 +202,21 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-    { 0,    XF86XK_AudioMute,                  spawn,          SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
-    { 0,    XF86XK_AudioRaiseVolume,           spawn,          SHCMD("pamixer -i 5 -u; kill -44 $(pidof dwmblocks)") },
-    { 0,    XF86XK_AudioLowerVolume,           spawn,          SHCMD("pamixer -d 5 -u; kill -44 $(pidof dwmblocks)") },
-    { 0,    XF86XK_AudioPrev,                  spawn,          SHCMD("playerctl previous") },
-    { 0,    XF86XK_AudioNext,                  spawn,          SHCMD("playerctl next") },
-    { 0,    XF86XK_AudioPause,                 spawn,          SHCMD("playerctl play-pause") },
-    { 0,    XF86XK_AudioPlay,                  spawn,          SHCMD("playerctl play-pause") },
-    { 0,    XF86XK_AudioStop,                  spawn,          SHCMD("playerctl stop") },
-    { 0,    XK_Break,                          spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle") },
-    { MODKEY,                       XK_s,      spawn,          SHCMD("scrot -m '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-    { MODKEY|ShiftMask,             XK_s,      spawn,          SHCMD("sleep 0.2; scrot -s '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-    { MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("scrot -u '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-    { MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
-    { MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
-    { MODKEY,                       XK_F5,     xrdb,           {.v = NULL } },
+	{ 0,    XF86XK_AudioMute,                  spawn,          SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
+	{ 0,    XF86XK_AudioRaiseVolume,           spawn,          SHCMD("pamixer -i 5 -u; kill -44 $(pidof dwmblocks)") },
+	{ 0,    XF86XK_AudioLowerVolume,           spawn,          SHCMD("pamixer -d 5 -u; kill -44 $(pidof dwmblocks)") },
+	{ 0,    XF86XK_AudioPrev,                  spawn,          SHCMD("playerctl previous") },
+	{ 0,    XF86XK_AudioNext,                  spawn,          SHCMD("playerctl next") },
+	{ 0,    XF86XK_AudioPause,                 spawn,          SHCMD("playerctl play-pause") },
+	{ 0,    XF86XK_AudioPlay,                  spawn,          SHCMD("playerctl play-pause") },
+	{ 0,    XF86XK_AudioStop,                  spawn,          SHCMD("playerctl stop") },
+	{ 0,    XK_Break,                          spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle") },
+	{ MODKEY,                       XK_s,      spawn,          SHCMD("scrot -m '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
+	{ MODKEY|ShiftMask,             XK_s,      spawn,          SHCMD("sleep 0.2; scrot -s '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
+	{ MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("scrot -u '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
+	{ MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
+	{ MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
+	{ MODKEY,                       XK_F5,     xrdb,           {.v = NULL } },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 	{ MODKEY|ControlMask|ShiftMask, XK_BackSpace, quit,        {1} },
 };
@@ -237,4 +237,3 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
-
