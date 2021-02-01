@@ -388,7 +388,7 @@ applyrules(Client *c)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
-	int swallow;
+	int swallow, switchtag;
 	const Rule *r;
 	Monitor *m;
 	XClassHint ch = { NULL, NULL };
@@ -415,34 +415,33 @@ applyrules(Client *c)
 			c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
 			swallow = termforwinBool(c);
-			if (!swallow)
+			if (!swallow) {
 				c->tags |= r->tags;
+				for (m = mons; m && m->num != r->monitor; m = m->next);
+				if (m)
+					c->mon = m;
+				switchtag = r->switchtag;
+			}
 			if ((r->tags & SPTAGMASK) && r->isfloating) {
 				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
 				c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
 			}
-			
-			if (!swallow) {
-				for (m = mons; m && m->num != r->monitor; m = m->next);
-				if (m)
-					c->mon = m;
-				if (r->switchtag) {
-					selmon = c->mon;
-					if (r->switchtag == 2 || r->switchtag == 4)
-						newtagset = c->mon->tagset[c->mon->seltags] ^ c->tags;
-					else
-						newtagset = c->tags;
-					if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
-						if (r->switchtag == 3 || r->switchtag == 4)
-						c->switchtag = c->mon->tagset[c->mon->seltags];
-						if (r->switchtag == 1 || r->switchtag == 3)
-							view(&((Arg) { .ui = newtagset }));
-						else {
-							c->mon->tagset[c->mon->seltags] = newtagset;
-							arrange(c->mon);
-						}
-					}
-				}
+		}
+	}
+	if (switchtag){
+		selmon = c->mon;
+		if (switchtag == 2 || switchtag == 4)
+			newtagset = c->mon->tagset[c->mon->seltags] ^ c->tags;
+		else
+			newtagset = c->tags;
+		if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
+			if (switchtag == 3 || switchtag == 4)
+			c->switchtag = c->mon->tagset[c->mon->seltags];
+			if (switchtag == 1 || switchtag == 3)
+			view(&((Arg) { .ui = newtagset }));
+			else {
+			c->mon->tagset[c->mon->seltags] = newtagset;
+			arrange(c->mon);
 			}
 		}
 	}
@@ -451,8 +450,6 @@ applyrules(Client *c)
 	if (ch.res_name)
 		XFree(ch.res_name);
 	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : (c->mon->tagset[c->mon->seltags] & ~SPTAGMASK);
-	/* Uncommend line below to find name window and add client name in the swallow function to exclude that for swallow */
-	/* fprintf(stderr, "Name: %s, Swallow: %d, Mon: %d, Tag: %d\n", c->name, swallow, c->mon->num, c->tags); */
 }
 
 int
@@ -667,7 +664,6 @@ clientmessage(XEvent *e)
 {
 	XClientMessageEvent *cme = &e->xclient;
 	Client *c = wintoclient(cme->window);
-	unsigned int i;
 
 	if (!c)
 		return;
@@ -677,14 +673,8 @@ clientmessage(XEvent *e)
 			setfullscreen(c, (cme->data.l[0] == 1 /* _NET_WM_STATE_ADD    */
 				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->isfullscreen)));
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
-		for (i = 0; i < TAGLENGTH && !((1 << i) & c->tags); i++);
-		if (i < TAGLENGTH) {
-			const Arg a = {.ui = 1 << i};
-			selmon = c->mon;
-			view(&a);
-			focus(c);
-			restack(selmon);
-		}
+		if (c != selmon->sel && !c->isurgent)
+			seturgent(c, 1);
 	}
 }
 
@@ -2115,16 +2105,10 @@ stackpos(const Arg *arg) {
 void
 swallow(Client *p, Client *c)
 {
-	unsigned int i;
-
 	if (c->noswallow || c->isterminal)
 		return;
 	if (c->noswallow && !swallowfloating && c->isfloating)
 		return;
-	/* Prevent swallowing if there is an loading window before the application */
-	for (i = 0; i < LENGTH(exclude_swallow); i++)
-		if (!strcmp(c->name, exclude_swallow[i]))
-			return;
 
 	detach(c);
 	detachstack(c);

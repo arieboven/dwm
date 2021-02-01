@@ -73,22 +73,13 @@ static const Rule rules[] = {
      *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
      *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
 	 */
-    /*
-     * In the function swallow(Client *p, Client *c) in dwm.c
-     * can certain windows be blocked for swallowing if there are loading windows
-    */
 	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
 	{ "Gimp",                NULL,     NULL,           0,	        1,         1,         1,          0,           0,        -1 },
-	{ "Firefox",             NULL,     NULL,           1 << 8,    0,         0,         0,          0,          -1,        -1 },
 	{ "St",                  NULL,     NULL,           0,         0,         0,         0,          1,           0,        -1 },
 	{ NULL,                  NULL,     "Event Tester", 0,         0,         0,         0,          0,           1,        -1 }, /* xev */
 	{ NULL,                  "spterm", NULL,           SPTAG(0),  0,         1,         1,          1,           1,        -1 },
 	{ NULL,                  "spfm",   NULL,           SPTAG(1),  0,         1,         1,          1,           1,        -1 },
 };
-
-/* Add client name to exclude for swallow, example loading window */
-/* To find window name, uncomment fprintf at the end in applyrules(Client *c) function */
-static const char *exclude_swallow[] = { "VirtualBox", "Discord Updater" };
 
 /* layout(s) */
 static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */

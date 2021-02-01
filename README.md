@@ -12,13 +12,12 @@ alpha | stacker
 attachbottom | staticstatus
 center | steam
 cyclelayouts | swallow
-focusonnetactive | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
-fullscreen (modified) | tagothermonitor
-noborder | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
-pertag | vanitygaps
-resetlayout | warp
-restartsig | xrdb
-scratchpads | 
+fullscreen (modified) | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
+noborder | tagothermonitor
+pertag | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
+resetlayout | vanitygaps
+restartsig | warp
+scratchpads | xrdb
 ---
 
 ## Features
