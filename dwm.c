@@ -388,7 +388,7 @@ applyrules(Client *c)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
-	int swallow, switchtag;
+	int swallow, switchtag = 0;
 	const Rule *r;
 	Monitor *m;
 	XClassHint ch = { NULL, NULL };
@@ -436,12 +436,12 @@ applyrules(Client *c)
 			newtagset = c->tags;
 		if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
 			if (switchtag == 3 || switchtag == 4)
-			c->switchtag = c->mon->tagset[c->mon->seltags];
+				c->switchtag = c->mon->tagset[c->mon->seltags];
 			if (switchtag == 1 || switchtag == 3)
-			view(&((Arg) { .ui = newtagset }));
+				view(&((Arg) { .ui = newtagset }));
 			else {
-			c->mon->tagset[c->mon->seltags] = newtagset;
-			arrange(c->mon);
+				c->mon->tagset[c->mon->seltags] = newtagset;
+				arrange(c->mon);
 			}
 		}
 	}
@@ -1287,12 +1287,6 @@ killclient(const Arg *arg)
 		XSetErrorHandler(xerror);
 		XUngrabServer(dpy);
 	}
-
-	unsigned int n;
-	Client *nbc;
-	for (n = 0, nbc = nexttiled(selmon->clients); nbc; nbc = nexttiled(nbc->next), n++);
-	if (n == 1)
-		resetlayout(NULL);
 }
 
 void
@@ -2533,8 +2527,11 @@ unmanage(Client *c, int destroyed)
 		arrange(m);
 		focus(NULL);
 		updateclientlist();
-		if (switchtag)
-			view(&(Arg) { .ui = switchtag });
+		if (!(nexttiled(selmon->clients))) {
+			resetlayout(NULL);
+			if (switchtag)
+				view(&(Arg) { .ui = switchtag });
+		}
 	}
 }
 
