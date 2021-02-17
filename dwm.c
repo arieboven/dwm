@@ -428,12 +428,14 @@ applyrules(Client *c)
 			}
 		}
 	}
+
 	if (switchtag){
 		selmon = c->mon;
 		if (switchtag == 2 || switchtag == 4)
 			newtagset = c->mon->tagset[c->mon->seltags] ^ c->tags;
 		else
 			newtagset = c->tags;
+
 		if (newtagset && !(c->tags & c->mon->tagset[c->mon->seltags])) {
 			if (switchtag == 3 || switchtag == 4)
 				c->switchtag = c->mon->tagset[c->mon->seltags];
@@ -445,6 +447,7 @@ applyrules(Client *c)
 			}
 		}
 	}
+
 	if (ch.res_class)
 		XFree(ch.res_class);
 	if (ch.res_name)
@@ -2527,11 +2530,10 @@ unmanage(Client *c, int destroyed)
 		arrange(m);
 		focus(NULL);
 		updateclientlist();
-		if (!(nexttiled(selmon->clients))) {
+		if (!(nexttiled(selmon->clients)))
 			resetlayout(NULL);
-			if (switchtag)
-				view(&(Arg) { .ui = switchtag });
-		}
+		if (switchtag)
+			view(&(Arg) { .ui = switchtag });
 	}
 }
 
