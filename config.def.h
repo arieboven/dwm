@@ -66,19 +66,19 @@ static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
-     *	switchtag has different options: 
-     *  - 0 is default behaviour
-     *  - 1 automatically moves you to the tag of the newly opened application
-     *  - 2 enables the tag of the newly opened application in addition to your existing enabled tags
-     *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
-     *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
+	 *	switchtag has different options: 
+	 *  - 0 is default behaviour
+	 *  - 1 automatically moves you to the tag of the newly opened application
+	 *  - 2 enables the tag of the newly opened application in addition to your existing enabled tags
+	 *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
+	 *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
 	 */
-	/* class                 instance  title           tags mask  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
-	{ "Gimp",                NULL,     NULL,           0,	        1,         1,         1,          0,           0,        -1 },
-	{ "St",                  NULL,     NULL,           0,         0,         0,         0,          1,           0,        -1 },
-	{ NULL,                  NULL,     "Event Tester", 0,         0,         0,         0,          0,           1,        -1 }, /* xev */
-	{ NULL,                  "spterm", NULL,           SPTAG(0),  0,         1,         1,          1,           1,        -1 },
-	{ NULL,                  "spfm",   NULL,           SPTAG(1),  0,         1,         1,          1,           1,        -1 },
+	/* class        instance  title           tags mask  exactname  switchtag  iscentered isfloating  isterminal   noswallow  monitor */
+	{ "Gimp",       NULL,     NULL,           0,         0,         1,         1,         1,          0,           0,        -1 },
+	{ "St",         NULL,     NULL,           0,         0,         0,         0,         0,          1,           0,        -1 },
+	{ NULL,         NULL,     "Event Tester", 0,         0,         0,         0,         0,          0,           1,        -1 }, /* xev */
+	{ NULL,         "spterm", NULL,           SPTAG(0),  0,         0,         1,         1,          1,           1,        -1 },
+	{ NULL,         "spfm",   NULL,           SPTAG(1),  0,         0,         1,         1,          1,           1,        -1 },
 };
 
 /* layout(s) */

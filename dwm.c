@@ -184,6 +184,7 @@ typedef struct {
 	const char *instance;
 	const char *title;
 	unsigned int tags;
+	int exactname;
 	int switchtag;
 	int iscentered;
 	int isfloating;
@@ -388,7 +389,7 @@ applyrules(Client *c)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
-	int swallow, switchtag = 0;
+	int swallow, rulematch, switchtag = 0;
 	const Rule *r;
 	Monitor *m;
 	XClassHint ch = { NULL, NULL };
@@ -406,9 +407,17 @@ applyrules(Client *c)
 
 	for (i = 0; i < LENGTH(rules); i++) {
 		r = &rules[i];
-		if ((!r->title || strstr(c->name, r->title))
-		&& (!r->class || strstr(class, r->class))
-		&& (!r->instance || strstr(instance, r->instance)))
+		if (r->exactname) {
+			rulematch = ((!r->title || !strcmp(c->name, r->title))
+				&& (!r->class || !strcmp(class, r->class))
+				&& (!r->instance || !strcmp(instance, r->instance)));
+		} else {
+			rulematch = ((!r->title || strstr(c->name, r->title))
+				&& (!r->class || strstr(class, r->class))
+				&& (!r->instance || strstr(instance, r->instance)));
+		}
+
+		if (rulematch)
 		{
 			c->iscentered = r->iscentered;
 			c->isterminal = r->isterminal;
