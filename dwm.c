@@ -917,7 +917,7 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + (2 * statuspadding); /* 5px right and left padding */
+		tw = TEXTW(stext) - lrpad + (2 * statuspadding); /* equal right and left padding */
 		drw_rect(drw, m->ww - tw, 0, statuspadding, bh, 1, 1);
 		drw_text(drw, m->ww - tw + statuspadding, 0, tw, bh, 0, stext, 0);
 	}
@@ -933,7 +933,7 @@ drawbar(Monitor *m)
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[m->num][i], urg & 1 << i);
 		if (occ & 1 << i)
-            drw_line(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
+			drw_rect_custom_clr(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
 		x += w;
 	}
 	w = blw = TEXTW(m->ltsymbol);
