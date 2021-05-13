@@ -457,6 +457,9 @@ applyrules(Client *c)
 		}
 	}
 
+	/* Uncommend when there are problems with finding the right class or name */
+	/* fprintf(stderr, "Name: %s, Class: %s\n", c->name, class); */
+
 	if (ch.res_class)
 		XFree(ch.res_class);
 	if (ch.res_name)
