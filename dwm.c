@@ -127,9 +127,8 @@ struct Client {
 	int bw, oldbw;
 	unsigned int tags;
 	unsigned int switchtag;
-	int isfixed, iscentered, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow;
+	int iscentered, isfixed, isfloating, isfullscreen, issteam, isurgent, isterminal, neverfocus, noswallow, oldstate, swallow;
 	pid_t pid;
-	int issteam;
 	Client *next;
 	Client *snext;
 	Client *swallowing;
@@ -284,7 +283,6 @@ static void tagswaptonextmon(const Arg *arg);
 static void tagswaptoprevmon(const Arg *arg);
 static void tagswaptomon(const Arg *arg, int dir);
 static Client *termforwin(const Client *c);
-static int termforwinBool(const Client *c);
 static void toggleattach(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
@@ -389,7 +387,7 @@ applyrules(Client *c)
 {
 	const char *class, *instance;
 	unsigned int i, newtagset;
-	int swallow, rulematch, switchtag = 0;
+	int rulematch, switchtag = 0;
 	const Rule *r;
 	Monitor *m;
 	XClassHint ch = { NULL, NULL };
@@ -423,8 +421,7 @@ applyrules(Client *c)
 			c->isterminal = r->isterminal;
 			c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
-			swallow = termforwinBool(c);
-			if (!swallow) {
+			if (!c->swallow) {
 				c->tags |= r->tags;
 				for (m = mons; m && m->num != r->monitor; m = m->next);
 				if (m)
@@ -1344,6 +1341,7 @@ manage(Window w, XWindowAttributes *wa)
 	c = ecalloc(1, sizeof(Client));
 	c->win = w;
 	c->pid = winpid(w);
+	c->swallow = 0;
 	/* geometry */
 	c->x = c->oldx = wa->x;
 	c->y = c->oldy = wa->y;
@@ -1357,8 +1355,10 @@ manage(Window w, XWindowAttributes *wa)
 		c->tags = t->tags;
 	} else {
 		c->mon = selmon;
-        applyrules(c);
 		term = termforwin(c);
+		if (term)
+			c->swallow = 1;
+		applyrules(c);
 	}
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
@@ -2336,17 +2336,6 @@ termforwin(const Client *w)
 	}
 
 	return NULL;
-}
-
-int
-termforwinBool(const Client *c)
-{
-	Client *w;
-	w = termforwin(c);
-	if (w)
-		return 1;
-	else
-		return 0;
 }
 
 void
