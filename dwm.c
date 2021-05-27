@@ -127,7 +127,7 @@ struct Client {
 	int bw, oldbw;
 	unsigned int tags;
 	unsigned int switchtag;
-	int iscentered, isfixed, isfloating, isfullscreen, issteam, isurgent, isterminal, neverfocus, noswallow, oldstate, swallow;
+	int focusonclick, iscentered, isfixed, isfloating, isfullscreen, issteam, isurgent, isterminal, neverfocus, noswallow, oldstate, swallow;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -185,6 +185,7 @@ typedef struct {
 	unsigned int tags;
 	int exactname;
 	int switchtag;
+	int focusonclick;
 	int iscentered;
 	int isfloating;
 	int isterminal;
@@ -396,6 +397,7 @@ applyrules(Client *c)
 	c->iscentered = 0;
 	c->isfloating = 0;
 	c->tags = 0;
+	c->focusonclick = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
@@ -418,6 +420,7 @@ applyrules(Client *c)
 		if (rulematch)
 		{
 			c->iscentered = r->iscentered;
+			c->focusonclick = r->focusonclick;
 			c->isterminal = r->isterminal;
 			c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
@@ -606,8 +609,10 @@ buttonpress(XEvent *e)
 		else
 			click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
-		focus(c);
-		restack(selmon);
+		if (ev->button != Button4 && ev->button != Button5) {
+			focus(c);
+			restack(selmon);
+		}
 		XAllowEvents(dpy, ReplayPointer, CurrentTime);
 		click = ClkClientWin;
 	}
@@ -977,7 +982,7 @@ enternotify(XEvent *e)
 	if (m != selmon) {
 		unfocus(selmon->sel, 1);
 		selmon = m;
-	} else if (!c || c == selmon->sel)
+	} else if (!c || c == selmon->sel || c->focusonclick)
 		return;
 	focus(c);
 }
@@ -2325,7 +2330,11 @@ termforwin(const Client *w)
 	Client *c;
 	Monitor *m;
 
-	if (!w->pid || w->isterminal)
+	/* commented is original of swallow patch.
+	*  this build checks if it will swallow before applying rules.
+	*  testing if this causes problems */
+	/* if (!w->pid || w->isterminal) */
+	if (!w->pid)
 		return NULL;
 
 	for (m = mons; m; m = m->next) {

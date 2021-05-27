@@ -1,0 +1,76 @@
+diff --git a/config.def.h b/config.def.h
+index 1c0b587..8cd13c6 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -26,9 +26,9 @@ static const Rule rules[] = {
+ 	 *	WM_CLASS(STRING) = instance, class
+ 	 *	WM_NAME(STRING) = title
+ 	 */
+-	/* class      instance    title       tags mask     isfloating   monitor */
+-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
+-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
++	/* class      instance    title       tags mask     focusonclick	isfloating   monitor */
++	{ "Gimp",     NULL,       NULL,       0,            0,			1,           -1 },
++	{ "Firefox",  NULL,       NULL,       1 << 8,       0,			0,           -1 },
+ };
+ 
+ /* layout(s) */
+diff --git a/dwm.c b/dwm.c
+index b0b3466..2b603b3 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -92,7 +92,7 @@ struct Client {
+ 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
+ 	int bw, oldbw;
+ 	unsigned int tags;
+-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
++	int isfixed, isfloating, isurgent, focusonclick, neverfocus, oldstate, isfullscreen;
+ 	Client *next;
+ 	Client *snext;
+ 	Monitor *mon;
+@@ -137,6 +137,7 @@ typedef struct {
+ 	const char *instance;
+ 	const char *title;
+ 	unsigned int tags;
++	int focusonclick;
+ 	int isfloating;
+ 	int monitor;
+ } Rule;
+@@ -288,6 +289,7 @@ applyrules(Client *c)
+ 	/* rule matching */
+ 	c->isfloating = 0;
+ 	c->tags = 0;
++	c->focusonclick = 0;
+ 	XGetClassHint(dpy, c->win, &ch);
+ 	class    = ch.res_class ? ch.res_class : broken;
+ 	instance = ch.res_name  ? ch.res_name  : broken;
+@@ -303,6 +305,7 @@ applyrules(Client *c)
+ 			for (m = mons; m && m->num != r->monitor; m = m->next);
+ 			if (m)
+ 				c->mon = m;
++			c->focusonclick = r->focusonclick;
+ 		}
+ 	}
+ 	if (ch.res_class)
+@@ -445,8 +448,10 @@ buttonpress(XEvent *e)
+ 		else
+ 			click = ClkWinTitle;
+ 	} else if ((c = wintoclient(ev->window))) {
+-		focus(c);
+-		restack(selmon);
++		if (ev->button != Button4 && ev->button != Button5) {
++			focus(c);
++			restack(selmon);
++		}
+ 		XAllowEvents(dpy, ReplayPointer, CurrentTime);
+ 		click = ClkClientWin;
+ 	}
+@@ -766,7 +771,7 @@ enternotify(XEvent *e)
+ 	if (m != selmon) {
+ 		unfocus(selmon->sel, 1);
+ 		selmon = m;
+-	} else if (!c || c == selmon->sel)
++	} else if (!c || c == selmon->sel || c->focusonclick)
+ 		return;
+ 	focus(c);
+ }
