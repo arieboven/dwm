@@ -25,18 +25,16 @@ static char sellinecolor[]          = "#d3a04d";
 static char normlinecolor[]         = "#444444";
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
-static char *colors[][3] = {
-       /*               fg           bg           border   */
-       [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
-       [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+static char *colors[][4] = {
+       /*               fg           bg           border			line   */
+       [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor,	normlinecolor },
+       [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor,	sellinecolor  },
 };
-static char *lineColors[] = {
-  sellinecolor, normlinecolor
-};
-static const unsigned int alphas[][3]      = {
-	/*               fg      bg        border     */
-	[SchemeNorm] = { OPAQUE, baralpha, borderalpha },
-	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
+
+static const unsigned int alphas[][4]      = {
+	/*               fg      bg        border		line   */
+	[SchemeNorm] = { OPAQUE, baralpha, borderalpha,	borderalpha },
+	[SchemeSel]  = { OPAQUE, baralpha, borderalpha,	borderalpha },
 };
 
 /* staticstatus */

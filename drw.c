@@ -253,11 +253,11 @@ drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int
 }
 
 void
-drw_rect_custom_clr(Drw *drw, int x, int y, unsigned int w, unsigned int h, Clr color)
+drw_line(Drw *drw, int x, int y, unsigned int w, unsigned int h)
 {
 	if (!drw)
 		return;
-	XSetForeground(drw->dpy, drw->gc, color.pixel);
+	XSetForeground(drw->dpy, drw->gc, drw->scheme[ColLine].pixel);
 	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
 }
 

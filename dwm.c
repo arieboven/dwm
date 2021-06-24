@@ -352,7 +352,6 @@ static int restart = 0;
 static int running = 1;
 static Cur *cursor[CurLast];
 static Clr **scheme;
-static Clr *customColors;
 static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon, *statmon;
@@ -939,7 +938,7 @@ drawbar(Monitor *m)
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[m->num][i], urg & 1 << i);
 		if (occ & 1 << i)
-			drw_rect_custom_clr(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw, m == selmon && selmon->sel && selmon->sel->tags & 1 << i ? customColors[0] : customColors[1]);
+			drw_line(drw, x + boxw, bh - 2, w - (2 * boxw + 1), boxw);
 		x += w;
 	}
 	w = blw = TEXTW(m->ltsymbol);
@@ -2002,10 +2001,7 @@ setup(void)
 	/* init appearance */
 	scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
 	for (i = 0; i < LENGTH(colors); i++)
-		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
-	customColors = ecalloc(LENGTH(lineColors), sizeof(XftColor));
-	for (i = 0; i < LENGTH(lineColors); i++)
-		drw_clr_create(drw, &customColors[i], lineColors[i], alphas[0][2]);
+		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 4);
 	/* init bars */
 	updatebars();
 	updatestatus();
@@ -3103,9 +3099,7 @@ xrdb(const Arg *arg)
 	loadxrdb();
 	int i;
 	for (i = 0; i < LENGTH(colors); i++)
-		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
-	for (i = 0; i < LENGTH(lineColors); i++)
-		drw_clr_create(drw, &customColors[i], lineColors[i], alphas[0][2]);
+		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 4);
 	focus(NULL);
 	arrange(NULL);
 }
