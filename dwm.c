@@ -126,6 +126,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
 	unsigned int tags;
+	unsigned int configtags;
 	unsigned int switchtag;
 	int focusonclick, iscentered, isfixed, isfloating, isfullscreen, issteam, isurgent, isterminal, neverfocus, noswallow, oldstate, swallow;
 	pid_t pid;
@@ -397,6 +398,7 @@ applyrules(Client *c)
 	c->iscentered = 0;
 	c->isfloating = 0;
 	c->tags = 0;
+	c->configtags = 0;
 	c->focusonclick = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
@@ -426,6 +428,7 @@ applyrules(Client *c)
 			c->isfloating = r->isfloating;
 			if (!c->swallow) {
 				c->tags |= r->tags;
+				c->configtags = r->tags;
 				for (m = mons; m && m->num != r->monitor; m = m->next);
 				if (m)
 					c->mon = m;
@@ -2520,6 +2523,7 @@ unmanage(Client *c, int destroyed)
 {
 	Monitor *m = c->mon;
 	unsigned int switchtag = c->switchtag;
+	unsigned int firsttag = c->configtags;
 	XWindowChanges wc;
 
 	if (c->swallowing) {
@@ -2555,10 +2559,12 @@ unmanage(Client *c, int destroyed)
 		arrange(m);
 		focus(NULL);
 		updateclientlist();
-		if (!(nexttiled(selmon->clients)))
+		if (!(nexttiled(m->clients)))
 			resetlayout(NULL);
-		if (switchtag)
+		if (switchtag && (m->tagset[m->seltags] & firsttag)) {
+			selmon = m;
 			view(&(Arg) { .ui = switchtag });
+		}
 	}
 }
 
