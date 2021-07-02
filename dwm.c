@@ -2562,7 +2562,10 @@ unmanage(Client *c, int destroyed)
 		if (!(nexttiled(m->clients)))
 			resetlayout(NULL);
 		if (switchtag && (m->tagset[m->seltags] & firsttag)) {
-			selmon = m;
+			if (m != selmon) {
+				unfocus(selmon->sel, 0);
+				selmon = m;
+			}
 			view(&(Arg) { .ui = switchtag });
 		}
 	}
