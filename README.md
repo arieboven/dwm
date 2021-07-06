@@ -8,16 +8,17 @@
 dwm out of the box has the necessary features. Through patches you can determine what features you would like to add. patches can be found on the [suckless.org](https://dwm.suckless.org/patches/) website. The more I use it the more patches I add/modify (for learning purpose and just trying out new patches if they fit my need). The patches that I added:  
 | | |
 | :---: | :---: |
-alpha | stacker
-attachbottom | staticstatus
+alpha | scratchpads
+attachbottom | stacker
+canfocusonclick | staticstatus
 center | steam
 cyclelayouts | swallow
 fullscreen (modified) | [switchtag](https://github.com/bakkeby/patches/blob/master/dwm/dwm-switchtag-6.2.diff)
-noborder | tagothermonitor
-pertag | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
-resetlayout | vanitygaps
-restartsig | warp
-scratchpads | xrdb
+layoutmenu | tagothermonitor
+noborder | [tagswapmon](https://github.com/bakkeby/patches/blob/master/dwm/dwm-tagswapmon-6.2.diff)
+pertag | vanitygaps
+resetlayout | warp
+restartsig | xrdb
 ---
 
 ## Features
@@ -37,8 +38,8 @@ scratchpads | xrdb
   + `dwm.selbgcolor: <COLOR>`
   + `dwm.selfgcolor: <COLOR>`
   + `dwm.selbordercolor: <COLOR>`
-  + `dwm.linecolor: <COLOR>`
-  + `dwm.linecolor: <COLOR>`
+  + `dwm.normlinecolor: <COLOR>`
+  + `dwm.sellinecolor: <COLOR>`
 + Included layouts whitch can cycled through:
   + Bound to key: tile, monocle, spiral, bstack, floating (`MODKEY + t/m/y/u/f`)
   + Not bound to key: dwindle, deck, bstackhoriz, grid, nrowgrid, horizgrid, gapplessgrid, centerdmaster, centerdfloatingmaster
