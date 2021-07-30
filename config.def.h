@@ -70,13 +70,16 @@ static const Rule rules[] = {
 	 *  - 2 enables the tag of the newly opened application in addition to your existing enabled tags
 	 *  - 3 as 1, but closing that window reverts the view back to what it was previously (*)
 	 *  - 4 as 2, but closing that window reverts the view back to what it was previously (*)
+	 *
+	 *  Available rules:
+	 *    IsCentered, IsFloating, IsTerminal, NoSwallow, FocusOnClick, ExactName
 	 */
-	/* class        instance  title           tags mask  exactname  switchtag  focusonclick iscentered isfloating  isterminal   noswallow  monitor */
-	{ "Gimp",       NULL,     NULL,           0,         0,         1,         0,           1,         1,          0,           0,        -1 },
-	{ "St",         NULL,     NULL,           0,         0,         0,         0,           0,         0,          1,           0,        -1 },
-	{ NULL,         NULL,     "Event Tester", 0,         0,         0,         0,           0,         0,          0,           1,        -1 }, /* xev */
-	{ NULL,         "spterm", NULL,           SPTAG(0),  0,         0,         0,           1,         1,          1,           1,        -1 },
-	{ NULL,         "spfm",   NULL,           SPTAG(1),  0,         0,         0,           1,         1,          1,           1,        -1 },
+	/* class        instance  title           tags mask  switchtag  rules                                       monitor */
+	{ "Gimp",       NULL,     NULL,           0,         1,         IsCentered|IsFloating,                        -1 },
+	{ "St",         NULL,     NULL,           0,         0,         IsTerminal,                                   -1 },
+	{ NULL,         NULL,     "Event Tester", 0,         0,         NoSwallow,                                    -1 }, /* xev */
+	{ NULL,         "spterm", NULL,           SPTAG(0),  0,         IsCentered|IsFloating|IsTerminal|NoSwallow,   -1 },
+	{ NULL,         "spfm",   NULL,           SPTAG(1),  0,         IsCentered|IsFloating|IsTerminal|NoSwallow,   -1 },
 };
 
 /* layout(s) */

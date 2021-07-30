@@ -63,6 +63,7 @@
 #define PREVSEL                 3000
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOD(N,M)                ((N)%(M) < 0 ? (N)%(M) + (M) : (N)%(M))
+#define MODBIT(x, set, bit)	    ((set) ? ((x) |= (bit)) : ((x) &= ~(bit)))
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
@@ -101,6 +102,22 @@ enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms *
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
 
+enum {
+	IsCentered   = 1 << 0,
+	IsFixed      = 1 << 1,
+	IsFloating   = 1 << 2,
+	IsFullscreen = 1 << 3,
+	IsSteam      = 1 << 4,
+	IsUrgent     = 1 << 5,
+	IsTerminal   = 1 << 6,
+	NeverFocus   = 1 << 7,
+	NoSwallow    = 1 << 8,
+	OldState     = 1 << 9,
+	WillSwallow  = 1 << 10,
+	FocusOnClick = 1 << 11,
+	ExactName    = 1 << 12,
+};
+
 typedef union {
 	int i;
 	unsigned int ui;
@@ -128,7 +145,7 @@ struct Client {
 	unsigned int tags;
 	unsigned int configtags;
 	unsigned int switchtag;
-	int focusonclick, iscentered, isfixed, isfloating, isfullscreen, issteam, isurgent, isterminal, neverfocus, noswallow, oldstate, swallow;
+	int rules;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -184,13 +201,8 @@ typedef struct {
 	const char *instance;
 	const char *title;
 	unsigned int tags;
-	int exactname;
 	int switchtag;
-	int focusonclick;
-	int iscentered;
-	int isfloating;
-	int isterminal;
-	int noswallow;
+	int rules;
 	int monitor;
 } Rule;
 
@@ -395,21 +407,18 @@ applyrules(Client *c)
 	XClassHint ch = { NULL, NULL };
 
 	/* rule matching */
-	c->iscentered = 0;
-	c->isfloating = 0;
 	c->tags = 0;
 	c->configtags = 0;
-	c->focusonclick = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
 
 	if (strstr(class, "Steam") || strstr(class, "steam_app_"))
-		c->issteam = 1;
+		MODBIT(c->rules, 1, IsSteam);
 
 	for (i = 0; i < LENGTH(rules); i++) {
 		r = &rules[i];
-		if (r->exactname) {
+		if (r->rules & ExactName) {
 			rulematch = ((!r->title || !strcmp(c->name, r->title))
 				&& (!r->class || !strcmp(class, r->class))
 				&& (!r->instance || !strcmp(instance, r->instance)));
@@ -421,12 +430,8 @@ applyrules(Client *c)
 
 		if (rulematch)
 		{
-			c->iscentered = r->iscentered;
-			c->focusonclick = r->focusonclick;
-			c->isterminal = r->isterminal;
-			c->noswallow  = r->noswallow;
-			c->isfloating = r->isfloating;
-			if (!c->swallow) {
+			c->rules |= r->rules;
+			if (!(c->rules & WillSwallow)) {
 				c->tags |= r->tags;
 				c->configtags = r->tags;
 				for (m = mons; m && m->num != r->monitor; m = m->next);
@@ -434,7 +439,7 @@ applyrules(Client *c)
 					c->mon = m;
 				switchtag = r->switchtag;
 			}
-			if ((r->tags & SPTAGMASK) && r->isfloating) {
+			if ((r->tags & SPTAGMASK) && r->rules & IsFloating) {
 				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
 				c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
 			}
@@ -502,7 +507,7 @@ applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 		*h = bh;
 	if (*w < bh)
 		*w = bh;
-	if (resizehints || c->isfloating || !c->mon->lt[c->mon->sellt]->arrange) {
+	if (resizehints || c->rules & IsFloating || !c->mon->lt[c->mon->sellt]->arrange) {
 		/* see last two sentences in ICCCM 4.1.2.3 */
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
 		if (!baseismin) { /* temporarily remove base dimensions */
@@ -691,9 +696,9 @@ clientmessage(XEvent *e)
 		if (cme->data.l[1] == netatom[NetWMFullscreen]
 		|| cme->data.l[2] == netatom[NetWMFullscreen])
 			setfullscreen(c, (cme->data.l[0] == 1 /* _NET_WM_STATE_ADD    */
-				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->isfullscreen)));
+				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !(c->rules & IsFullscreen))));
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
-		if (c != selmon->sel && !c->isurgent)
+		if (c != selmon->sel && !(c->rules & IsUrgent))
 			seturgent(c, 1);
 	}
 }
@@ -735,7 +740,7 @@ configurenotify(XEvent *e)
 			updatebars();
 			for (m = mons; m; m = m->next) {
 				for (c = m->clients; c; c = c->next)
-					if (c->isfullscreen)
+					if (c->rules & IsFullscreen)
 						resizeclient(c, m->mx, m->my, m->mw, m->mh);
 				XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, m->ww, bh);
 			}
@@ -756,9 +761,9 @@ configurerequest(XEvent *e)
 	if ((c = wintoclient(ev->window))) {
 		if (ev->value_mask & CWBorderWidth)
 			c->bw = ev->border_width;
-		else if (c->isfloating || !selmon->lt[selmon->sellt]->arrange) {
+		else if (c->rules & IsFloating || !selmon->lt[selmon->sellt]->arrange) {
 			m = c->mon;
-			if (!c->issteam) {
+			if (!(c->rules & IsSteam)) {
 				if (ev->value_mask & CWX) {
 					c->oldx = c->x;
 					c->x = m->mx + ev->x;
@@ -776,9 +781,9 @@ configurerequest(XEvent *e)
 				c->oldh = c->h;
 				c->h = ev->height;
 			}
-			if ((c->x + c->w) > m->mx + m->mw && c->isfloating)
+			if ((c->x + c->w) > m->mx + m->mw && c->rules & IsFloating)
 				c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
-			if ((c->y + c->h) > m->my + m->mh && c->isfloating)
+			if ((c->y + c->h) > m->my + m->mh && c->rules & IsFloating)
 				c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
 			if ((ev->value_mask & (CWX|CWY)) && !(ev->value_mask & (CWWidth|CWHeight)))
 				configure(c);
@@ -931,7 +936,7 @@ drawbar(Monitor *m)
 
 	for (c = m->clients; c; c = c->next) {
 		occ |= c->tags;
-		if (c->isurgent)
+		if (c->rules & IsUrgent)
 			urg |= c->tags;
 	}
 	x = 0;
@@ -951,8 +956,8 @@ drawbar(Monitor *m)
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
-			if (m->sel->isfloating)
-				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+			if (m->sel->rules & IsFloating)
+				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->rules & IsFixed, 0);
 		} else {
 			drw_setscheme(drw, scheme[SchemeNorm]);
 			drw_rect(drw, x, 0, w, bh, 1, 1);
@@ -984,7 +989,7 @@ enternotify(XEvent *e)
 	if (m != selmon) {
 		unfocus(selmon->sel, 1);
 		selmon = m;
-	} else if (!c || c == selmon->sel || c->focusonclick)
+	} else if (!c || c == selmon->sel || (c->rules & FocusOnClick))
 		return;
 	focus(c);
 }
@@ -1009,7 +1014,7 @@ focus(Client *c)
 	if (c) {
 		if (c->mon != selmon)
 			selmon = c->mon;
-		if (c->isurgent)
+		if (c->rules & IsUrgent)
 			seturgent(c, 0);
 		detachstack(c);
 		attachstack(c);
@@ -1366,7 +1371,7 @@ manage(Window w, XWindowAttributes *wa)
 	c = ecalloc(1, sizeof(Client));
 	c->win = w;
 	c->pid = winpid(w);
-	c->swallow = 0;
+	c->rules = 0;
 	/* geometry */
 	c->x = c->oldx = wa->x;
 	c->y = c->oldy = wa->y;
@@ -1382,7 +1387,7 @@ manage(Window w, XWindowAttributes *wa)
 		c->mon = selmon;
 		term = termforwin(c);
 		if (term)
-			c->swallow = 1;
+			MODBIT(c->rules, 1, WillSwallow);
 		applyrules(c);
 	}
 
@@ -1403,15 +1408,15 @@ manage(Window w, XWindowAttributes *wa)
 	updatewindowtype(c);
 	updatesizehints(c);
 	updatewmhints(c);
-	if (c->iscentered) {
+	if (c->rules & IsCentered) {
 		c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
 		c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
 	}
 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
 	grabbuttons(c, 0);
-	if (!c->isfloating)
-		c->isfloating = c->oldstate = trans != None || c->isfixed;
-	if (c->isfloating)
+	if (!(c->rules & IsFloating))
+		MODBIT(c->rules, MODBIT(c->rules, trans != None, OldState) & OldState || c->rules & IsFixed, IsFloating);
+	if (c->rules & IsFloating)
 		XRaiseWindow(dpy, c->win);
 	if (c->mon->attachbelow)
 		attachbottom(c);
@@ -1499,7 +1504,7 @@ movemouse(const Arg *arg)
 
 	if (!(c = selmon->sel))
 		return;
-	if (c->isfullscreen) /* no support moving fullscreen windows by mouse */
+	if (c->rules & IsFullscreen) /* no support moving fullscreen windows by mouse */
 		return;
 	restack(selmon);
 	ocx = c->x;
@@ -1532,10 +1537,10 @@ movemouse(const Arg *arg)
 				ny = selmon->wy;
 			else if (abs((selmon->wy + selmon->wh) - (ny + HEIGHT(c))) < snap)
 				ny = selmon->wy + selmon->wh - HEIGHT(c);
-			if (!c->isfloating && selmon->lt[selmon->sellt]->arrange
+			if (!(c->rules & IsFloating) && selmon->lt[selmon->sellt]->arrange
 			&& (abs(nx - c->x) > snap || abs(ny - c->y) > snap))
 				togglefloating(NULL);
-			if (!selmon->lt[selmon->sellt]->arrange || c->isfloating)
+			if (!selmon->lt[selmon->sellt]->arrange || c->rules & IsFloating)
 				resize(c, nx, ny, c->w, c->h, 1);
 			break;
 		}
@@ -1551,7 +1556,7 @@ movemouse(const Arg *arg)
 Client *
 nexttiled(Client *c)
 {
-	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
+	for (; c && (c->rules & IsFloating || !ISVISIBLE(c)); c = c->next);
 	return c;
 }
 
@@ -1579,8 +1584,8 @@ propertynotify(XEvent *e)
 		switch(ev->atom) {
 		default: break;
 		case XA_WM_TRANSIENT_FOR:
-			if (!c->isfloating && (XGetTransientForHint(dpy, c->win, &trans)) &&
-				(c->isfloating = (wintoclient(trans)) != NULL))
+			if (!(c->rules & IsFloating) && (XGetTransientForHint(dpy, c->win, &trans)) &&
+				(MODBIT(c->rules, (wintoclient(trans) != NULL), IsFloating) & IsFloating))
 				arrange(c->mon);
 			break;
 		case XA_WM_NORMAL_HINTS:
@@ -1680,7 +1685,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
 
 	if (((nexttiled(c->mon->clients) == c && !nexttiled(c->next))
 	    || &monocle == c->mon->lt[c->mon->sellt]->arrange)
-	    && !c->isfullscreen && !c->isfloating
+	    && !(c->rules & IsFullscreen) && !(c->rules & IsFloating)
 	    && NULL != c->mon->lt[c->mon->sellt]->arrange) {
 		c->w = wc.width += c->bw * 2;
 		c->h = wc.height += c->bw * 2;
@@ -1703,7 +1708,7 @@ resizemouse(const Arg *arg)
 
 	if (!(c = selmon->sel))
 		return;
-	if (c->isfullscreen) /* no support resizing fullscreen windows by mouse */
+	if (c->rules & IsFullscreen) /* no support resizing fullscreen windows by mouse */
 		return;
 	restack(selmon);
 	ocx = c->x;
@@ -1730,11 +1735,11 @@ resizemouse(const Arg *arg)
 			if (c->mon->wx + nw >= selmon->wx && c->mon->wx + nw <= selmon->wx + selmon->ww
 			&& c->mon->wy + nh >= selmon->wy && c->mon->wy + nh <= selmon->wy + selmon->wh)
 			{
-				if (!c->isfloating && selmon->lt[selmon->sellt]->arrange
+				if (!(c->rules & IsFloating) && selmon->lt[selmon->sellt]->arrange
 				&& (abs(nw - c->w) > snap || abs(nh - c->h) > snap))
 					togglefloating(NULL);
 			}
-			if (!selmon->lt[selmon->sellt]->arrange || c->isfloating)
+			if (!selmon->lt[selmon->sellt]->arrange || c->rules & IsFloating)
 				resize(c, c->x, c->y, nw, nh, 1);
 			break;
 		}
@@ -1759,13 +1764,13 @@ restack(Monitor *m)
 	drawbar(m);
 	if (!m->sel)
 		return;
-	if (m->sel->isfloating || !m->lt[m->sellt]->arrange)
+	if (m->sel->rules & IsFloating || !m->lt[m->sellt]->arrange)
 		XRaiseWindow(dpy, m->sel->win);
 	if (m->lt[m->sellt]->arrange) {
 		wc.stack_mode = Below;
 		wc.sibling = m->barwin;
 		for (c = m->stack; c; c = c->snext)
-			if (!c->isfloating && ISVISIBLE(c)) {
+			if (!(c->rules & IsFloating) && ISVISIBLE(c)) {
 				XConfigureWindow(dpy, c->win, CWSibling|CWStackMode, &wc);
 				wc.sibling = c->win;
 			}
@@ -1872,7 +1877,7 @@ sendevent(Client *c, Atom proto)
 void
 setfocus(Client *c)
 {
-	if (!c->neverfocus) {
+	if (!(c->rules & NeverFocus)) {
 		XSetInputFocus(dpy, c->win, RevertToPointerRoot, CurrentTime);
 		XChangeProperty(dpy, root, netatom[NetActiveWindow],
 			XA_WINDOW, 32, PropModeReplace,
@@ -1884,21 +1889,20 @@ setfocus(Client *c)
 void
 setfullscreen(Client *c, int fullscreen)
 {
-	if (fullscreen && !c->isfullscreen) {
+	if (fullscreen && !(c->rules & IsFullscreen)) {
 		XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
 		PropModeReplace, (unsigned char*)&netatom[NetWMFullscreen], 1);
-		c->isfullscreen = 1;
-		c->oldstate = c->isfloating;
+		MODBIT(c->rules, c->rules & IsFloating, OldState);
 		c->oldbw = c->bw;
 		c->bw = 0;
-		c->isfloating = 1;
+		MODBIT(c->rules, 1, IsFloating|IsFullscreen);
 		resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
 		XRaiseWindow(dpy, c->win);
-	} else if (!fullscreen && c->isfullscreen){
+	} else if (!fullscreen && c->rules & IsFullscreen){
 		XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
 		PropModeReplace, (unsigned char*)0, 0);
-		c->isfullscreen = 0;
-		c->isfloating = c->oldstate;
+		MODBIT(c->rules, 0, IsFullscreen);
+		MODBIT(c->rules, c->rules & OldState, IsFloating);
 		c->bw = c->oldbw;
 		c->x = c->oldx;
 		c->y = c->oldy;
@@ -2035,7 +2039,7 @@ seturgent(Client *c, int urg)
 {
 	XWMHints *wmh;
 
-	c->isurgent = urg;
+	MODBIT(c->rules, urg, IsUrgent);
 	if (!(wmh = XGetWMHints(dpy, c->win)))
 		return;
 	wmh->flags = urg ? (wmh->flags | XUrgencyHint) : (wmh->flags & ~XUrgencyHint);
@@ -2049,13 +2053,13 @@ showhide(Client *c)
 	if (!c)
 		return;
 	if (ISVISIBLE(c)) {
-		if ((c->tags & SPTAGMASK) && c->isfloating) {
+		if ((c->tags & SPTAGMASK) && c->rules & IsFloating) {
 			c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
 			c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
 		}
 		/* show clients top down */
 		XMoveWindow(dpy, c->win, c->x, c->y);
-		if ((!c->mon->lt[c->mon->sellt]->arrange || c->isfloating) && !c->isfullscreen)
+		if ((!c->mon->lt[c->mon->sellt]->arrange || c->rules & IsFloating) && !(c->rules & IsFullscreen))
 			resize(c, c->x, c->y, c->w, c->h, 0);
 		showhide(c->snext);
 	} else {
@@ -2136,9 +2140,9 @@ stackpos(const Arg *arg) {
 void
 swallow(Client *p, Client *c)
 {
-	if (c->noswallow || c->isterminal)
+	if (c->rules & (NoSwallow|IsTerminal))
 		return;
-	if (c->noswallow && !swallowfloating && c->isfloating)
+	if (c->rules & NoSwallow && !swallowfloating && c->rules & IsFloating)
 		return;
 
 	detach(c);
@@ -2267,7 +2271,7 @@ tagswapmon(const Arg *arg)
 		c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
 		attach(c);
 		attachstack(c);
-		if (c->isfullscreen) {
+		if (c->rules & IsFullscreen) {
 			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
 			XRaiseWindow(dpy, c->win);
 		}
@@ -2279,7 +2283,7 @@ tagswapmon(const Arg *arg)
 		c->tags = selmon->tagset[selmon->seltags]; /* assign tags of target monitor */
 		attach(c);
 		attachstack(c);
-		if (c->isfullscreen) {
+		if (c->rules & IsFullscreen) {
 			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
 			XRaiseWindow(dpy, c->win);
 		}
@@ -2330,7 +2334,7 @@ tagswaptomon(const Arg *arg, int dir)
 			c->tags = arg->ui & TAGMASK; /* assign tags of target monitor */
 		attach(c);
 		attachstack(c);
-		if (c->isfullscreen) {
+		if (c->rules & IsFullscreen) {
 			setfullscreen(c, 0);
 			setfullscreen(c, 1);
 		}
@@ -2356,7 +2360,7 @@ termforwin(const Client *w)
 
 	for (m = mons; m; m = m->next) {
 		for (c = m->clients; c; c = c->next) {
-			if (c->isterminal && !c->swallowing && c->pid && isdescprocess(c->pid, w->pid))
+			if (c->rules & IsTerminal && !c->swallowing && c->pid && isdescprocess(c->pid, w->pid))
 				return c;
 		}
 	}
@@ -2386,10 +2390,10 @@ togglefloating(const Arg *arg)
 {
 	if (!selmon->sel)
 		return;
-	if (selmon->sel->isfullscreen) /* no support for fullscreen windows */
+	if (selmon->sel->rules & IsFullscreen) /* no support for fullscreen windows */
 		return;
-	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
-	if (selmon->sel->isfloating)
+	MODBIT(selmon->sel->rules, !(selmon->sel->rules & IsFloating) || selmon->sel->rules & IsFixed, IsFloating);
+	if (selmon->sel->rules & IsFloating)
 		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
 			selmon->sel->w, selmon->sel->h, 0);
 	arrange(selmon);
@@ -2797,7 +2801,7 @@ updatesizehints(Client *c)
 		c->maxa = (float)size.max_aspect.x / size.max_aspect.y;
 	} else
 		c->maxa = c->mina = 0.0;
-	c->isfixed = (c->maxw && c->maxh && c->maxw == c->minw && c->maxh == c->minh);
+	MODBIT(c->rules, (c->maxw && c->maxh && c->maxw == c->minw && c->maxh == c->minh), IsFixed);
 }
 
 void
@@ -2825,10 +2829,8 @@ updatewindowtype(Client *c)
 
 	if (state == netatom[NetWMFullscreen])
 		setfullscreen(c, 1);
-	if (wtype == netatom[NetWMWindowTypeDialog]) {
-		c->iscentered = 1;
-		c->isfloating = 1;
-	}
+	if (wtype == netatom[NetWMWindowTypeDialog])
+		MODBIT(c->rules, 1, IsCentered|IsFloating);
 }
 
 void
@@ -2841,11 +2843,8 @@ updatewmhints(Client *c)
 			wmh->flags &= ~XUrgencyHint;
 			XSetWMHints(dpy, c->win, wmh);
 		} else
-			c->isurgent = (wmh->flags & XUrgencyHint) ? 1 : 0;
-		if (wmh->flags & InputHint)
-			c->neverfocus = !wmh->input;
-		else
-			c->neverfocus = 0;
+			MODBIT(c->rules, (wmh->flags & XUrgencyHint) ? 1 : 0, IsUrgent);
+		MODBIT(c->rules, (wmh->flags & InputHint) ? !wmh->input : 0, NeverFocus);
 		XFree(wmh);
 	}
 }
@@ -3118,7 +3117,7 @@ zoom(const Arg *arg)
 	Client *c = selmon->sel;
 
 	if (!selmon->lt[selmon->sellt]->arrange
-	|| (selmon->sel && selmon->sel->isfloating))
+	|| (selmon->sel && selmon->sel->rules & IsFloating))
 		return;
 	if (c == nexttiled(selmon->clients))
 		if (!c || !(c = nexttiled(c->next)))
