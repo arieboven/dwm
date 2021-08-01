@@ -1658,6 +1658,7 @@ resetlayout(const Arg *arg)
 
 	defaultgaps(NULL);
 	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag] = nmaster;
+	selmon->attachbelow = selmon->pertag->attachbelows[selmon->pertag->curtag] = attachbelow;
 	setlayout(&default_layout);
 	setmfact(&default_mfact);
 	selmon->realfullscreen = 0;
