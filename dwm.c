@@ -272,6 +272,7 @@ static void run(void);
 static void scan(void);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
+static void setcenter(const Arg *arg);
 static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
@@ -1839,6 +1840,21 @@ sendmon(Client *c, Monitor *m)
 	arrange(NULL);
 	if (c->switchtag)
 		c->switchtag = 0;
+}
+
+void
+setcenter(const Arg *arg)
+{
+	if (!selmon->sel)
+		return;
+	if (selmon->sel->rules & IsFullscreen) /* no support for fullscreen windows */
+		return;
+	MODBIT(selmon->sel->rules, !(selmon->sel->rules & IsFixed), IsCentered);
+	if (selmon->sel->rules & IsCentered) {
+		selmon->sel->x = selmon->sel->mon->mx + (selmon->sel->mon->mw - WIDTH(selmon->sel)) / 2;
+		selmon->sel->y = selmon->sel->mon->my + (selmon->sel->mon->mh - HEIGHT(selmon->sel)) / 2;
+	}
+	arrange(selmon);
 }
 
 void
