@@ -2135,7 +2135,7 @@ stackpos(const Arg *arg) {
 	int n, i;
 	Client *c, *l;
 
-	if (!selmon->clients || !selmon->sel || ((selmon->sel->rules & IsFullscreen) & lockfullscreen))
+	if (!selmon->clients || !selmon->sel || ((selmon->sel->rules & IsFullscreen) && lockfullscreen))
 		return -1;
 
 	if (arg->i == PREVSEL) {
