@@ -1607,8 +1607,8 @@ propertynotify(XEvent *e)
 		}
 		if (ev->atom == netatom[NetWMWindowType])
 			updatewindowtype(c);
-		if (ev->atom == wmatom[WMClass])
-			applyrules(c);
+		/* if (ev->atom == wmatom[WMClass]) */
+		/* 	applyrules(c); */
 	}
 }
 
