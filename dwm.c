@@ -174,7 +174,7 @@ struct Monitor {
 	int attachbelow;
 	int realfullscreen, oldshowbar;
 	int num;
-	int by;               /* bar geometry */
+	int bx, by, bw;       /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	int gappih;           /* horizontal gap between windows */
@@ -613,7 +613,7 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext))
+		else if (ev->x > selmon->bw - ((int)TEXTW(stext) - lrpad + 2 * statuspadding))
 			click = ClkStatusText;
 		else
 			click = ClkWinTitle;
@@ -743,7 +743,7 @@ configurenotify(XEvent *e)
 				for (c = m->clients; c; c = c->next)
 					if (c->rules & IsFullscreen)
 						resizeclient(c, m->mx, m->my, m->mw, m->mh);
-				XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, m->ww, bh);
+				XMoveResizeWindow(dpy, m->barwin, m->bx, m->by, m->bw, bh);
 			}
 			focus(NULL);
 			arrange(NULL);
@@ -935,7 +935,7 @@ drawbar(Monitor *m)
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad + (2 * statuspadding); /* equal right and left padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, statuspadding, stext, 0);
+		drw_text(drw, m->bw - tw, 0, tw, bh, statuspadding, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -956,7 +956,7 @@ drawbar(Monitor *m)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
-	if ((w = m->ww - tw - x) > bh) {
+	if ((w = m->bw - tw - x) > bh) {
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
@@ -967,7 +967,7 @@ drawbar(Monitor *m)
 			drw_rect(drw, x, 0, w, bh, 1, 1);
 		}
 	}
-	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+	drw_map(drw, m->barwin, 0, 0, m->bw, bh);
 }
 
 void
@@ -1947,6 +1947,8 @@ setgaps(int oh, int ov, int ih, int iv)
 	selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV] = ov;
 	selmon->gappih = selmon->pertag->gaps[selmon->pertag->curtag][innerH] = ih;
 	selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV] = iv;
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
 	arrange(selmon);
 }
 
@@ -2404,7 +2406,7 @@ togglebar(const Arg *arg)
 		selmon->realfullscreen = 0;
 	selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] = !selmon->showbar;
 	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
 	arrange(selmon);
 }
 
@@ -2444,6 +2446,8 @@ void
 togglegaps(const Arg *arg)
 {
 	selmon->pertag->enablegaps[selmon->pertag->curtag] = !selmon->pertag->enablegaps[selmon->pertag->curtag];
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
 	arrange(selmon);
 }
 
@@ -2645,7 +2649,7 @@ updatebars(void)
 	for (m = mons; m; m = m->next) {
 		if (m->barwin)
 			continue;
-		m->barwin = XCreateWindow(dpy, root, m->wx, m->by, m->ww, bh, 0, depth,
+		m->barwin = XCreateWindow(dpy, root, m->bx, m->by, m->bw, bh, 0, depth,
 		                          InputOutput, visual,
 		                          CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &wa);
 		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
@@ -2657,14 +2661,19 @@ updatebars(void)
 void
 updatebarpos(Monitor *m)
 {
+	int sidepad = m->gappov * m->pertag->enablegaps[m->pertag->curtag];
+	int vertpad = m->gappoh * m->pertag->enablegaps[m->pertag->curtag];
+
+	m->bx = m->wx + sidepad;
+	m->bw = m->ww - (2 * sidepad);
 	m->wy = m->my;
 	m->wh = m->mh;
 	if (m->showbar) {
-		m->wh -= bh;
-		m->by = m->topbar ? m->wy : m->wy + m->wh;
-		m->wy = m->topbar ? m->wy + bh : m->wy;
+		m->wh -= bh + vertpad;
+		m->by = m->topbar ? m->wy + vertpad : m->wy + m->wh;
+		m->wy = m->topbar ? m->wy + bh + vertpad : m->wy;
 	} else
-		m->by = -bh;
+		m->by = -bh - 2 * vertpad;
 }
 
 void
