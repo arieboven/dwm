@@ -1959,9 +1959,12 @@ setlayout(const Arg *arg)
 		selmon->sellt = selmon->pertag->sellts[selmon->pertag->curtag] ^= 1;
 	if (arg && arg->v)
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt] = (Layout *)arg->v;
-	if (selmon->realfullscreen)
-		if (selmon->showbar != selmon->oldshowbar)
-			togglebar(NULL);
+	if (selmon->realfullscreen && selmon->showbar != selmon->oldshowbar)
+		togglebar(NULL);
+	else {
+		updatebarpos(selmon);
+		XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	}
 	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
 	if (selmon->sel)
 		arrange(selmon);
@@ -2007,7 +2010,7 @@ setup(void)
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
-	bh = drw->fonts->h + 4;
+	bh = drw->fonts->h + bhpadding;
 	updategeom();
 	/* init atoms */
 	utf8string = XInternAtom(dpy, "UTF8_STRING", False);
@@ -2661,8 +2664,15 @@ updatebars(void)
 void
 updatebarpos(Monitor *m)
 {
-	int sidepad = m->gappov * m->pertag->enablegaps[m->pertag->curtag];
-	int vertpad = m->gappoh * m->pertag->enablegaps[m->pertag->curtag];
+	int sidepad, vertpad;
+
+	if (&monocle == m->lt[m->sellt]->arrange) {
+		sidepad = 0;
+		vertpad = 0;
+	} else {
+		sidepad = m->gappov * m->pertag->enablegaps[m->pertag->curtag];
+		vertpad = m->gappoh * m->pertag->enablegaps[m->pertag->curtag];
+	}
 
 	m->bx = m->wx + sidepad;
 	m->bw = m->ww - (2 * sidepad);
