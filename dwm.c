@@ -187,6 +187,7 @@ struct Monitor {
 	unsigned int tagset[2];
 	int showbar;
 	int topbar;
+	int barpad;
 	Client *clients;
 	Client *sel;
 	Client *stack;
@@ -306,6 +307,7 @@ static void tagswaptomon(const Arg *arg, int dir);
 static Client *termforwin(const Client *c);
 static void toggleattach(const Arg *arg);
 static void togglebar(const Arg *arg);
+static void togglebarpad(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
 static void togglegaps(const Arg *arg);
@@ -396,6 +398,7 @@ struct Pertag {
 	const Layout *ltidxs[TAGLENGTH + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[TAGLENGTH + 1]; /* display bar for the current tag */
 	int enablegaps[TAGLENGTH + 1]; /* enable gaps or not */
+	int barpads[TAGLENGTH + 1]; /* enable gaps for bar or not */
 	int gaps[TAGLENGTH + 1][4]; /* gap values */
 };
 
@@ -831,6 +834,7 @@ createmon(void)
 	m->gappiv = gappiv;
 	m->gappoh = gappoh;
 	m->gappov = gappov;
+	m->barpad = barpadding;
 	m->lt[0] = &layouts[0];
 	m->lt[1] = &layouts[1 % LENGTH(layouts)];
 	m->last_layout = &layouts[0];
@@ -1672,6 +1676,7 @@ resetlayout(const Arg *arg)
 	defaultgaps(NULL);
 	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag] = nmaster;
 	selmon->attachbelow = selmon->pertag->attachbelows[selmon->pertag->curtag] = attachbelow;
+	selmon->barpad = selmon->pertag->barpads[selmon->pertag->curtag] = barpadding;
 	setlayout(&default_layout);
 	setmfact(&default_mfact);
 	selmon->realfullscreen = 0;
@@ -2459,6 +2464,15 @@ togglebar(const Arg *arg)
 }
 
 void
+togglebarpad(const Arg *arg)
+{
+	selmon->barpad = selmon->pertag->barpads[selmon->pertag->curtag] = !selmon->barpad;
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	arrange(selmon);
+}
+
+void
 togglefloating(const Arg *arg)
 {
 	if (!selmon->sel)
@@ -2712,7 +2726,7 @@ updatebarpos(Monitor *m)
 {
 	int sidepad, vertpad;
 
-	if (&monocle == m->lt[m->sellt]->arrange) {
+	if (&monocle == m->lt[m->sellt]->arrange || !m->barpad) {
 		sidepad = 0;
 		vertpad = 0;
 	} else {

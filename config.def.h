@@ -14,6 +14,7 @@ static const int attachbelow        = 0;        /* 1 means attach to bottom of t
 static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
+static const int barpadding         = 1;        /* 0 means no padding on bar */
 static const char *fonts[]          = { "monospace:size=10", "JoyPixels:pixelsize=11:antialias=true:autohint=true" };
 static const char dmenufont[]       = "monospace:size=11";
 static char normbgcolor[]           = "#222222";
@@ -151,6 +152,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_grave,  togglescratch,  {.ui = 1 } },
 	{ MODKEY,                       XK_b,      spawn,          SHCMD("firefox") },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
+	{ MODKEY|ControlMask,           XK_b,      togglebarpad,   {0} },
 	{ MODKEY|ShiftMask,             XK_d,      toggleattach,   {0} },
 	STACKKEYS(MODKEY,                          focus)
 	STACKKEYS(MODKEY|ShiftMask,                push)
