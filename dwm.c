@@ -212,6 +212,7 @@ typedef struct {
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
+static void arrangebar(Monitor *m);
 static void arrangemon(Monitor *m);
 static void attach(Client *c);
 static void attachbottom(Client *c);
@@ -566,6 +567,13 @@ arrange(Monitor *m)
 }
 
 void
+arrangebar(Monitor *m)
+{
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+}
+
+void
 arrangemon(Monitor *m)
 {
 	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
@@ -857,6 +865,7 @@ createmon(void)
 		m->pertag->gaps[i][innerV] = m->gappiv;
 		m->pertag->gaps[i][outerH] = m->gappoh;
 		m->pertag->gaps[i][outerV] = m->gappov;
+		m->pertag->barpads[i] = m->barpad;
 	}
 
 	return m;
@@ -1983,8 +1992,7 @@ setgaps(int oh, int ov, int ih, int iv)
 	selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV] = ov;
 	selmon->gappih = selmon->pertag->gaps[selmon->pertag->curtag][innerH] = ih;
 	selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV] = iv;
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	arrangebar(selmon);
 	arrange(selmon);
 }
 
@@ -1997,10 +2005,8 @@ setlayout(const Arg *arg)
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt] = (Layout *)arg->v;
 	if (selmon->realfullscreen && selmon->showbar != selmon->oldshowbar)
 		togglebar(NULL);
-	else {
-		updatebarpos(selmon);
-		XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
-	}
+	else
+		arrangebar(selmon);
 	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
 	if (selmon->sel)
 		arrange(selmon);
@@ -2458,8 +2464,7 @@ togglebar(const Arg *arg)
 	if (selmon->realfullscreen)
 		selmon->realfullscreen = 0;
 	selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] = !selmon->showbar;
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	arrangebar(selmon);
 	arrange(selmon);
 }
 
@@ -2467,8 +2472,7 @@ void
 togglebarpad(const Arg *arg)
 {
 	selmon->barpad = selmon->pertag->barpads[selmon->pertag->curtag] = !selmon->barpad;
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	arrangebar(selmon);
 	arrange(selmon);
 }
 
@@ -2508,8 +2512,7 @@ void
 togglegaps(const Arg *arg)
 {
 	selmon->pertag->enablegaps[selmon->pertag->curtag] = !selmon->pertag->enablegaps[selmon->pertag->curtag];
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	arrangebar(selmon);
 	arrange(selmon);
 }
 
@@ -2589,6 +2592,7 @@ toggleview(const Arg *arg)
 		selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV];
 		selmon->gappoh = selmon->pertag->gaps[selmon->pertag->curtag][outerH];
 		selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV];
+		selmon->barpad = selmon->pertag->barpads[selmon->pertag->curtag];
 
 		if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
 			togglebar(NULL);
@@ -3002,11 +3006,13 @@ view(const Arg *arg)
 	selmon->gappiv = selmon->pertag->gaps[selmon->pertag->curtag][innerV];
 	selmon->gappoh = selmon->pertag->gaps[selmon->pertag->curtag][outerH];
 	selmon->gappov = selmon->pertag->gaps[selmon->pertag->curtag][outerV];
+	selmon->barpad = selmon->pertag->barpads[selmon->pertag->curtag];
 
 	if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
 		togglebar(NULL);
 
 	focus(NULL);
+	arrangebar(selmon);
 	arrange(selmon);
 	updatecurrentdesktop();
 }
