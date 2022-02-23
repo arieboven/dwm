@@ -53,7 +53,8 @@
 
 /* macros */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
-#define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+#define MODMASK                 (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask)
+#define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & MODMASK)
 #define GETINC(X)               ((X) - 2000)
 #define INC(X)                  ((X) + 2000)
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
@@ -1272,8 +1273,8 @@ grabkeys(void)
 		for (i = 0; i < LENGTH(keys); i++)
 			if ((code = XKeysymToKeycode(dpy, keys[i].keysym)))
 				for (j = 0; j < LENGTH(modifiers); j++)
-					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
-						True, GrabModeAsync, GrabModeAsync);
+					XGrabKey(dpy, code, keys[i].mod == MODMASK ? AnyModifier : keys[i].mod | modifiers[j],
+						root, True, GrabModeAsync, GrabModeAsync);
 	}
 }
 
@@ -1316,7 +1317,7 @@ keypress(XEvent *e)
 	keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
 	for (i = 0; i < LENGTH(keys); i++)
 		if (keysym == keys[i].keysym
-		&& CLEANMASK(keys[i].mod) == CLEANMASK(ev->state)
+		&& (keys[i].mod == MODMASK || CLEANMASK(keys[i].mod) == CLEANMASK(ev->state))
 		&& keys[i].func)
 			keys[i].func(&(keys[i].arg));
 }
