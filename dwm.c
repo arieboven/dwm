@@ -147,7 +147,7 @@ struct Client {
 	unsigned int tags;
 	unsigned int configtags;
 	unsigned int switchtag;
-	int rules;
+	unsigned int rules;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -205,7 +205,7 @@ typedef struct {
 	const char *title;
 	unsigned int tags;
 	int switchtag;
-	int rules;
+	unsigned int rules;
 	int monitor;
 } Rule;
 
