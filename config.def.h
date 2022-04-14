@@ -150,7 +150,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_grave,  togglescratch,  {.ui = 0 } },
 	{ MODKEY|ShiftMask,             XK_grave,  togglescratch,  {.ui = 1 } },
-	{ MODKEY,                       XK_b,      spawn,          SHCMD("firefox") },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY|ControlMask,           XK_b,      togglebarpad,   {0} },
 	{ MODKEY|ShiftMask,             XK_d,      toggleattach,   {0} },
@@ -200,20 +199,6 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODMASK,    XF86XK_AudioMute,            spawn,          SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
-	{ MODMASK,    XF86XK_AudioRaiseVolume,     spawn,          SHCMD("pamixer -i 5 -u; kill -44 $(pidof dwmblocks)") },
-	{ MODMASK,    XF86XK_AudioLowerVolume,     spawn,          SHCMD("pamixer -d 5 -u; kill -44 $(pidof dwmblocks)") },
-	{ MODMASK,    XF86XK_AudioPrev,            spawn,          SHCMD("playerctl previous") },
-	{ MODMASK,    XF86XK_AudioNext,            spawn,          SHCMD("playerctl next") },
-	{ MODMASK,    XF86XK_AudioPause,           spawn,          SHCMD("playerctl play-pause") },
-	{ MODMASK,    XF86XK_AudioPlay,            spawn,          SHCMD("playerctl play-pause") },
-	{ MODMASK,    XF86XK_AudioStop,            spawn,          SHCMD("playerctl stop") },
-	{ MODMASK,    XK_Break,                    spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle") },
-	{ MODKEY,                       XK_s,      spawn,          SHCMD("scrot -m '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-	{ MODKEY|ShiftMask,             XK_s,      spawn,          SHCMD("sleep 0.2; scrot -s '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-	{ MODKEY|ControlMask,           XK_s,      spawn,          SHCMD("scrot -u '%Y-%m-%d_%H%M%S.png' -e 'mv $f ~/Pictures/screenshots/'") },
-	{ MODKEY|ShiftMask,             XK_m,      spawn,          SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle ; pkill -RTMIN+12 dwmblocks") },
-	{ MODKEY|ShiftMask,             XK_t,      spawn,          SHCMD("pgrep picom && killall picom || picom -b") },
 	{ MODKEY,                       XK_F5,     xrdb,           {.v = NULL } },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 	{ MODKEY|ControlMask|ShiftMask, XK_BackSpace, quit,        {1} },
