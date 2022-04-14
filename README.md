@@ -87,10 +87,9 @@ necessary as root):
 
     make install
 
-I have my custom config.h configuration stored in my [dotfiles](https://github.com/arieboven/dotfiles/tree/master/.config/git) repo, in which I have added tagnames, window rules, and some custom keybindings.
 
 ### dwmblocks
-I use [dwmblocks](https://github.com/torrinfail/dwmblocks) for my statusbar. If you want you can make your own script with use of `xsetroot -name`, but I prefer dwmblocks. You can find my config of dwmblocks also in my [dotfiles](https://github.com/arieboven/dotfiles/tree/master/.config/git) repo with the scripts that I use.
+I use [dwmblocks](https://github.com/torrinfail/dwmblocks) for my statusbar. If you want you can make your own script with use of `xsetroot -name`.
 
 ---
 
