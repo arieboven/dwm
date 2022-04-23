@@ -2805,8 +2805,10 @@ updategeom(void)
 				for (m = mons; m && m->next; m = m->next);
 				if (m)
 					m->next = createmon();
-				else
+				else {
 					mons = createmon();
+					statmon = mons;
+				}
 			}
 			for (i = 0, m = mons; i < nn && m; m = m->next, i++){
 				if (i >= n
@@ -2850,8 +2852,10 @@ updategeom(void)
 	} else
 #endif /* XINERAMA */
 	{ /* default monitor setup */
-		if (!mons)
+		if (!mons) {
 			mons = createmon();
+			statmon = mons;
+		}
 		if (mons->mw != sw || mons->mh != sh) {
 			dirty = 1;
 			mons->mw = mons->ww = sw;
