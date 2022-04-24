@@ -72,7 +72,8 @@
 #define TAGMASK                 ((1 << NUMTAGS) - 1)
 #define SPTAG(i)                ((1 << TAGLENGTH) << (i))
 #define SPTAGMASK               (((1 << LENGTH(scratchpads))-1) << TAGLENGTH)
-#define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
+/* #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad) */
+#define TEXTW(X,P)              (drw_fontset_getwidth(drw, (X)) + ((P) ? lrpad : 0))
 #define TRUNC(X,A,B)            (MAX((A), MIN((X), (B))))
 #define XRDB_LOAD_COLOR(R,V)    if (XrmGetResource(xrdb, R, NULL, &type, &value) == True) { \
 						if (value.addr != NULL && strnlen(value.addr, 8) == 7 && value.addr[0] == '#') { \
@@ -144,9 +145,7 @@ struct Client {
 	int oldx, oldy, oldw, oldh;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
-	unsigned int tags;
-	unsigned int configtags;
-	unsigned int switchtag;
+	unsigned int tags, configtags, switchtag;
 	unsigned int rules;
 	pid_t pid;
 	Client *next;
@@ -173,21 +172,16 @@ struct Monitor {
 	char ltsymbol[16];
 	float mfact;
 	int nmaster;
-	int attachbelow;
-	int realfullscreen, oldshowbar;
 	int num;
 	int bx, by, bw;       /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
-	int gappih;           /* horizontal gap between windows */
-	int gappiv;           /* vertical gap between windows */
-	int gappoh;           /* horizontal outer gaps */
-	int gappov;           /* vertical outer gaps */
+	int gappih, gappiv;   /* horizontal and vertical gap between windows */
+	int gappoh, gappov;   /* horizontal and vertical outer gaps */
 	unsigned int seltags;
 	unsigned int sellt;
 	unsigned int tagset[2];
-	int showbar;
-	int topbar;
+	int showbar, topbar, attachbelow, realfullscreen, oldshowbar;
 	int barpad;
 	Client *clients;
 	Client *sel;
@@ -570,8 +564,8 @@ arrange(Monitor *m)
 void
 arrangebar(Monitor *m)
 {
-	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->bx, selmon->by, selmon->bw, bh);
+	updatebarpos(m);
+	XMoveResizeWindow(dpy, m->barwin, m->bx, m->by, m->bw, bh);
 }
 
 void
@@ -624,7 +618,7 @@ buttonpress(XEvent *e)
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
 		do
-			x += TEXTW(tags[selmon->num][i]);
+			x += TEXTW(tags[selmon->num][i], 1);
 		while (ev->x >= x && ++i < TAGLENGTH);
 		if (i < TAGLENGTH) {
 			click = ClkTagBar;
@@ -632,7 +626,7 @@ buttonpress(XEvent *e)
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
 		else if (selmon == statmon &&
-				ev->x > selmon->bw - ((int)TEXTW(stext) - lrpad + 2 * statuspadding))
+				ev->x > selmon->bw - ((int)TEXTW(stext, 0) + 2 * statuspadding))
 			click = ClkStatusText;
 		else
 			click = ClkWinTitle;
@@ -955,7 +949,7 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == statmon) { /* status is only drawn on user-defined status monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + (2 * statuspadding); /* equal right and left padding */
+		tw = TEXTW(stext, 0) + (2 * statuspadding); /* equal right and left padding */
 		drw_text(drw, m->bw - tw, 0, tw, bh, statuspadding, stext, 0);
 	}
 
@@ -966,14 +960,14 @@ drawbar(Monitor *m)
 	}
 	x = 0;
 	for (i = 0; i < TAGLENGTH; i++) {
-		w = TEXTW(tags[m->num][i]);
+		w = TEXTW(tags[m->num][i], 1);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[m->num][i], urg & 1 << i);
 		if (occ & 1 << i)
 			drw_line(drw, x + boxw, bh - 2, w - (2 * boxw), boxw);
 		x += w;
 	}
-	w = blw = TEXTW(m->ltsymbol);
+	w = blw = TEXTW(m->ltsymbol, 1);
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
