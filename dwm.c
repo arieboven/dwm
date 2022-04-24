@@ -72,7 +72,6 @@
 #define TAGMASK                 ((1 << NUMTAGS) - 1)
 #define SPTAG(i)                ((1 << TAGLENGTH) << (i))
 #define SPTAGMASK               (((1 << LENGTH(scratchpads))-1) << TAGLENGTH)
-/* #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad) */
 #define TEXTW(X,P)              (drw_fontset_getwidth(drw, (X)) + ((P) ? lrpad : 0))
 #define TRUNC(X,A,B)            (MAX((A), MIN((X), (B))))
 #define XRDB_LOAD_COLOR(R,V)    if (XrmGetResource(xrdb, R, NULL, &type, &value) == True) { \
