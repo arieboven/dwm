@@ -264,7 +264,7 @@ static int getrootptr(int *x, int *y);
 static pid_t getparentprocess(pid_t p);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
-static unsigned int getsystraywidth();
+static unsigned int getsystraywidth(Monitor *m);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
@@ -1316,15 +1316,12 @@ getstate(Window w)
 }
 
 unsigned int
-getsystraywidth()
+getsystraywidth(Monitor *m)
 {
 	unsigned int w = 0;
 	Client *i;
 
-	if (!systray)
-		return 0;
-
-	if (showsystray)
+	if (systray && showsystray && m == statmon)
 		for (i = systray->icons; i; w += i->w + systraypadding, i = i->next);
 	return w ? w + systraypadding : 0;
 }
@@ -2927,7 +2924,7 @@ updatebarpos(Monitor *m)
 	}
 
 	m->bx = m->wx + sidepad;
-	m->bw = m->ww - (2 * sidepad) - getsystraywidth();
+	m->bw = m->ww - (2 * sidepad) - getsystraywidth(m);
 	m->wy = m->my;
 	m->wh = m->mh;
 	if (m->showbar) {
