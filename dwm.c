@@ -1341,7 +1341,7 @@ killclient(const Arg *arg)
 void
 layoutmenu(const Arg *arg) {
 	FILE *p;
-	char c[3], *s;
+	char c[3] = {0}, *s;
 	int i;
 
 	if (!(p = popen(layoutmenu_cmd, "r")))
@@ -1349,7 +1349,7 @@ layoutmenu(const Arg *arg) {
 	s = fgets(c, sizeof(c), p);
 	pclose(p);
 
-	if (!s || *s == '\0' || c == '\0')
+	if (!s || *s == '\0' || c[0] == '\0')
 		 return;
 
 	i = atoi(c);
@@ -1904,7 +1904,7 @@ setdesktopnames(void)
 {
 	XTextProperty text;
 
-	Xutf8TextListToTextProperty(dpy, tags, TAGLENGTH, XUTF8StringStyle, &text);
+	Xutf8TextListToTextProperty(dpy, (char **)tags, TAGLENGTH, XUTF8StringStyle, &text);
 	XSetTextProperty(dpy, root, &text, netatom[NetDesktopNames]);
 }
 
