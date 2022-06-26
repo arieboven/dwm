@@ -4,6 +4,7 @@
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int statuspadding = 5;    /* Padding on left and right side status */
+static const unsigned int systraypadding = 2;   /* systray spacing */
 static const unsigned int bhpadding = 2;        /* bar height padding, default is 2 */
 static const unsigned int gappih    = 8;        /* horiz inner gap between windows */
 static const unsigned int gappiv    = 8;        /* vert inner gap between windows */
@@ -14,6 +15,7 @@ static const int attachbelow        = 0;        /* 1 means attach to bottom of t
 static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
+static const int showsystray        = 1;        /* 0 means no systray */
 static const int barpadding         = 1;        /* 0 means no padding on bar */
 static const char *fonts[]          = { "monospace:size=10", "JoyPixels:pixelsize=11:antialias=true:autohint=true" };
 static const char dmenufont[]       = "monospace:size=11";
