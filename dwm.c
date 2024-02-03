@@ -2848,7 +2848,7 @@ unmanage(Client *c, int destroyed)
 		arrange(m);
 		focus(NULL);
 		updateclientlist();
-		if (!(nexttiled(m->clients)))
+		if (!(nexttiled(m->clients)) && selmon == m)
 			resetlayout(NULL);
 		if (switchtag && (m->tagset[m->seltags] & firsttag)) {
 			if (m != selmon) {
