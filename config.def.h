@@ -92,6 +92,14 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
+/* monitor rules */
+static const MonitorRule monitorrules[] = {
+	/* monitor	nmaster		mfact */
+	{ 0,		nmaster,	mfact },
+	{ 1,		0,			mfact },
+	{ 2,		nmaster,	mfact },
+};
+
 #define FORCE_VSPLIT 1  /* nrowgrid layout: force two clients to always split vertically */
 #include "vanitygaps.c"
 
@@ -144,7 +152,6 @@ static const char *termcmd[]  = { "st", NULL };
 static const char *layoutmenu_cmd = "layoutmenu.sh";
 
 #include <X11/XF86keysym.h>
-
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */

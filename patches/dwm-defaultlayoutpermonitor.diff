@@ -1,0 +1,58 @@
+diff --git a/config.def.h b/config.def.h
+index a2ac963..7c87de8 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -37,6 +37,11 @@ static const int nmaster     = 1;    /* number of clients in master area */
+ static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
+ static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
+ 
++static const int lpm[] = {
++        /* Index of preferred layout], if LENGTH(lpm)<#monitors -> default layout */
++        0, 1
++};
++
+ static const Layout layouts[] = {
+ 	/* symbol     arrange function */
+ 	{ "[]=",      tile },    /* first entry is default */
+diff --git a/dwm.c b/dwm.c
+index a96f33c..64cec29 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -142,6 +142,7 @@ typedef struct {
+ } Rule;
+ 
+ /* function declarations */
++static void applydefaultlayouts();
+ static void applyrules(Client *c);
+ static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
+ static void arrange(Monitor *m);
+@@ -276,6 +277,21 @@ static Window root, wmcheckwin;
+ struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+ 
+ /* function implementations */
++void
++applydefaultlayouts()
++{
++    Monitor *m;
++    int i = 0;
++    for (m = mons; m; m = m->next) {
++        if (i < LENGTH(lpm)) {
++            m->lt[0] = &layouts[lpm[i]];
++            m->lt[1] = &layouts[(lpm[i] + 1)/ % LENGTH(layouts)];
++            strncpy(m->ltsymbol, layouts[i].symbol, sizeof m->ltsymbol);
++        }
++        i++;
++    }
++}
++
+ void
+ applyrules(Client *c)
+ {
+@@ -1911,6 +1927,7 @@ updategeom(void)
+ 				cleanupmon(m);
+ 			}
+ 		}
++        applydefaultlayouts();
+ 		free(unique);
+ 	} else
+ #endif /* XINERAMA */

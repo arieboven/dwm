@@ -220,6 +220,12 @@ typedef struct {
 	int monitor;
 } Rule;
 
+typedef struct {
+	const int monitor;
+	const int nmaster;
+	const float mfact;
+} MonitorRule;
+
 typedef struct Systray Systray;
 struct Systray {
 	Window win;
@@ -227,6 +233,7 @@ struct Systray {
 };
 
 /* function declarations */
+static void applymonitorrules(Monitor *m);
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
@@ -437,6 +444,26 @@ struct Pertag {
 struct NumTags { char limitexceeded[TAGLENGTH > 31 ? -1 : 1]; };
 
 /* function implementations */
+void
+applymonitorrules(Monitor *m)
+{
+	unsigned int i, tag;
+	const MonitorRule *r;
+
+	for (i = 0; i < LENGTH(monitorrules); i++) {
+		r = &monitorrules[i];
+		if (r->monitor == m->num) {
+			m->nmaster = r->nmaster;
+			m->mfact = r->mfact;
+
+			for (tag = 0; tag <= TAGLENGTH; tag++) {
+				m->pertag->nmasters[tag] = r->nmaster;
+				m->pertag->mfacts[tag] = r->mfact;
+			}
+		}
+	}
+}
+
 void
 applyrules(Client *c)
 {
@@ -3014,6 +3041,7 @@ updategeom(void)
 				m->my = m->wy = unique[i].y_org;
 				m->mw = m->ww = unique[i].width;
 				m->mh = m->wh = unique[i].height;
+				applymonitorrules(m);
 				updatebarpos(m);
 			}
 			if(i == statmonval)
