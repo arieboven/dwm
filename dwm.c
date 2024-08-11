@@ -63,6 +63,7 @@
 #define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
 #define PREVSEL                 3000
 #define LENGTH(X)               (sizeof X / sizeof X[0])
+#define MINIMIZED(C)            ((getstate(C->win) == IconicState))
 #define MOD(N,M)                ((N)%(M) < 0 ? (N)%(M) + (M) : (N)%(M))
 #define MODBIT(x, set, bit)	    ((set) ? ((x) |= (bit)) : ((x) &= ~(bit)))
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
@@ -283,6 +284,7 @@ static void loadxrdb(void);
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
+static void minimize(Client *c);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
@@ -347,6 +349,7 @@ static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
+static void unminimize(Client *c);
 static void unswallow(Client *c);
 static void updatebarpos(Monitor *m);
 static void updatebars(void);
@@ -1636,6 +1639,29 @@ maprequest(XEvent *e)
 }
 
 void
+minimize(Client *c)
+{
+	if (!c || MINIMIZED(c))
+		return;
+
+	Window w = c->win;
+	static XWindowAttributes ra, ca;
+
+	// more or less taken directly from blackbox's hide() function
+	XGrabServer(dpy);
+	XGetWindowAttributes(dpy, root, &ra);
+	XGetWindowAttributes(dpy, w, &ca);
+	// prevent UnmapNotify events
+	XSelectInput(dpy, root, ra.your_event_mask & ~SubstructureNotifyMask);
+	XSelectInput(dpy, w, ca.your_event_mask & ~StructureNotifyMask);
+	XUnmapWindow(dpy, w);
+	setclientstate(c, IconicState);
+	XSelectInput(dpy, root, ra.your_event_mask);
+	XSelectInput(dpy, w, ca.your_event_mask);
+	XUngrabServer(dpy);
+}
+
+void
 monocle(Monitor *m)
 {
 	unsigned int n = 0;
@@ -2141,6 +2167,10 @@ setfocus(Client *c)
 			XA_WINDOW, 32, PropModeReplace,
 			(unsigned char *) &(c->win), 1);
 	}
+
+	if (c->rules & IsSteam && c->rules & IsFullscreen)
+		unminimize(c);
+
 	sendevent(c->win, wmatom[WMTakeFocus], NoEventMask, wmatom[WMTakeFocus], CurrentTime, 0, 0, 0);
 }
 
@@ -2825,6 +2855,10 @@ unfocus(Client *c, int setfocus)
 {
 	if (!c)
 		return;
+
+	if (c->rules & IsSteam && c->rules & IsFullscreen)
+		unminimize(c);
+
 	grabbuttons(c, 0);
 	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
 	if (setfocus) {
@@ -2902,6 +2936,16 @@ unmapnotify(XEvent *e)
 		XMapRaised(dpy, c->win);
 		updatesystray(1);
 	}
+}
+
+void
+unminimize(Client *c)
+{
+	if (!c || !MINIMIZED(c))
+		return;
+
+	XMapWindow(dpy, c->win);
+	setclientstate(c, NormalState);
 }
 
 void
